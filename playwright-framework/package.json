@@ -1,0 +1,30 @@
+{
+  "name": "playwright-framework",
+  "version": "1.0.0",
+  "description": "Enterprise Playwright Test Automation Framework with POM",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test tests/ui",
+    "test:api": "npx playwright test tests/api",
+    "test:hybrid": "npx playwright test tests/hybrid",
+    "test:local": "cross-env ENV=local npx playwright test",
+    "test:staging": "cross-env ENV=staging npx playwright test",
+    "test:production": "cross-env ENV=production npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "report": "npx playwright show-report reports/html",
+    "allure:generate": "allure generate --output reports/allure-report reports/allure-results",
+    "allure:open": "allure serve reports/allure-results"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.50.0",
+    "dotenv": "^16.4.7",
+    "winston": "^3.17.0",
+    "allure-playwright": "^3.2.0",
+    "cross-env": "^7.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}

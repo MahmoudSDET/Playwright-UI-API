@@ -1,0 +1,17 @@
+[
+  {
+    "name": "ADIDAS ORIGINAL",
+    "price": 11500,
+    "category": "fashion"
+  },
+  {
+    "name": "ZARA COAT 3",
+    "price": 11500,
+    "category": "fashion"
+  },
+  {
+    "name": "iphone 13 pro",
+    "price": 55000,
+    "category": "electronics"
+  }
+]
