@@ -1,9 +1,0 @@
-[2026-03-30 19:51:27] INFO: ▶ Starting test: "should show error for invalid credentials" [login.spec.ts] | Feature: Login Page Tests | Suite: ui | Project: chromium
-[2026-03-30 19:51:27] INFO: Navigating to #/auth/login
-[2026-03-30 19:51:30] INFO: Logging in as invalid@example.com
-[2026-03-30 19:51:31] INFO: 📋 Test annotations for "should show error for invalid credentials":
-[2026-03-30 19:51:31] INFO:    [feature]: Login Page Tests
-[2026-03-30 19:51:31] INFO:    [suite]: ui
-[2026-03-30 19:51:31] INFO:    [file]: login.spec.ts
-[2026-03-30 19:51:31] INFO:    [project]: chromium
-[2026-03-30 19:51:31] INFO: ✅ Test "should show error for invalid credentials" passed (3402ms)

@@ -1,2 +1,0 @@
-[2026-03-30 11:40:12] INFO: Navigating to #/auth/login
-[2026-03-30 11:40:14] INFO: Logging in as invalid@example.com
