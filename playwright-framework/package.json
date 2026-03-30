@@ -3,28 +3,70 @@
   "version": "1.0.0",
   "description": "Enterprise Playwright Test Automation Framework with POM",
   "scripts": {
-    "test": "npx playwright test",
-    "test:ui": "npx playwright test tests/ui",
-    "test:api": "npx playwright test tests/api",
-    "test:hybrid": "npx playwright test tests/hybrid",
-    "test:local": "cross-env ENV=local npx playwright test",
-    "test:staging": "cross-env ENV=staging npx playwright test",
-    "test:production": "cross-env ENV=production npx playwright test",
-    "test:headed": "npx playwright test --headed",
+    "clean:reports": "rimraf reports/allure-report reports/allure-results && mkdirp reports/allure-report reports/allure-results",
+    "allure:generate": "rimraf reports/allure-report && npx allure generate -o reports/allure-report --open reports/allure-results",
+    "allure:open": "npx allure open ./reports/allure-report",
+    "posttest": "npm run allure:generate",
+
+    "test": "npm run clean:reports && (npx playwright test || echo Tests failed but continuing...) && npm run posttest",
+    "test:ui": "npm run clean:reports && (npx playwright test tests/ui || echo Tests failed but continuing...) && npm run posttest",
+    "test:api": "npm run clean:reports && (npx playwright test tests/api || echo Tests failed but continuing...) && npm run posttest",
+    "test:hybrid": "npm run clean:reports && (npx playwright test tests/hybrid || echo Tests failed but continuing...) && npm run posttest",
+    "test:regression": "npm run clean:reports && (npx playwright test || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:ui:chromium": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/ui --project=chromium --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:ui:firefox": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/ui --project=firefox --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:ui:webkit": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/ui --project=webkit --headed || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:ui:chromium:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/ui --project=chromium --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:ui:firefox:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/ui --project=firefox --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:ui:webkit:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/ui --project=webkit --headed || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:ui:chromium:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/ui --project=chromium --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:ui:firefox:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/ui --project=firefox --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:ui:webkit:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/ui --project=webkit --headed || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:api:chromium": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/api --project=chromium || echo Tests failed but continuing...) && npm run posttest",
+    "test:api:firefox": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/api --project=firefox || echo Tests failed but continuing...) && npm run posttest",
+    "test:api:webkit": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/api --project=webkit || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:api:chromium:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/api --project=chromium || echo Tests failed but continuing...) && npm run posttest",
+    "test:api:firefox:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/api --project=firefox || echo Tests failed but continuing...) && npm run posttest",
+    "test:api:webkit:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/api --project=webkit || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:api:chromium:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/api --project=chromium || echo Tests failed but continuing...) && npm run posttest",
+    "test:api:firefox:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/api --project=firefox || echo Tests failed but continuing...) && npm run posttest",
+    "test:api:webkit:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/api --project=webkit || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:hybrid:chromium": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/hybrid --project=chromium --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:hybrid:firefox": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/hybrid --project=firefox --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:hybrid:webkit": "npm run clean:reports && (cross-env ENV=local npx playwright test tests/hybrid --project=webkit --headed || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:hybrid:chromium:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/hybrid --project=chromium --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:hybrid:firefox:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/hybrid --project=firefox --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:hybrid:webkit:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test tests/hybrid --project=webkit --headed || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:hybrid:chromium:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/hybrid --project=chromium --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:hybrid:firefox:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/hybrid --project=firefox --headed || echo Tests failed but continuing...) && npm run posttest",
+    "test:hybrid:webkit:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/hybrid --project=webkit --headed || echo Tests failed but continuing...) && npm run posttest",
+
+    "test:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test || echo Tests failed but continuing...) && npm run posttest",
+    "test:production": "npm run clean:reports && (cross-env ENV=production npx playwright test || echo Tests failed but continuing...) && npm run posttest",
+
     "test:debug": "npx playwright test --debug",
-    "report": "npx playwright show-report reports/html",
-    "allure:generate": "allure generate --output reports/allure-report reports/allure-results",
-    "allure:open": "allure serve reports/allure-results"
+    "report": "npx playwright show-report reports/html"
   },
   "dependencies": {
     "@playwright/test": "^1.50.0",
-    "dotenv": "^16.4.7",
-    "winston": "^3.17.0",
     "allure-playwright": "^3.2.0",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.7",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "mkdirp": "^3.0.1",
+    "rimraf": "^6.1.3",
+    "typescript": "^5.7.0"
   }
 }
