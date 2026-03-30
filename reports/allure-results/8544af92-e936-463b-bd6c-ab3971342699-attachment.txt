@@ -1,0 +1,2 @@
+[2026-03-30 12:20:19] INFO: POST /api/ecom/auth/login
+[2026-03-30 12:20:20] ERROR: API Error [400]: {"message":"Incorrect email or password."}

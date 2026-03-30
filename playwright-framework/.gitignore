@@ -3,3 +3,11 @@ dist/
 reports/
 .env*.local.override
 *.tsbuildinfo
+
+# Logs
+logs/
+*.log
+
+# Allure reports
+allure-results/
+allure-report/

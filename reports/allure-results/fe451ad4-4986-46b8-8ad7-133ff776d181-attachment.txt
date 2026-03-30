@@ -1,0 +1,7 @@
+[2026-03-30 11:25:09] INFO: Navigating to #/auth/login
+[2026-03-30 11:25:12] INFO: Logging in as testpom2026@example.com
+[2026-03-30 11:25:13] INFO: Adding ZARA COAT 3 to cart
+[2026-03-30 11:25:15] INFO: Navigating to cart
+[2026-03-30 11:25:15] INFO: Proceeding to checkout
+[2026-03-30 11:25:15] INFO: Selecting country starting with: Ind
+[2026-03-30 11:25:16] INFO: Placing order
