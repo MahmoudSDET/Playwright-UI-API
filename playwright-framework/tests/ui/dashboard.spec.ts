@@ -13,35 +13,46 @@ test.describe('Dashboard Page Tests', () => {
   });
 
   test('should display products on dashboard', async ({ dashboardPage }) => {
-    const count = await dashboardPage.getProductCount();
-    expect(count).toBeGreaterThan(0);
+    await test.step('Check product count on dashboard', async () => {
+      const count = await dashboardPage.getProductCount();
+      expect(count).toBeGreaterThan(0);
+    });
   });
 
   test('should display product names', async ({ dashboardPage }) => {
-    const names = await dashboardPage.getProductNames();
-    expect(names.length).toBeGreaterThan(0);
+    await test.step('Get product names from dashboard', async () => {
+      const names = await dashboardPage.getProductNames();
+      expect(names.length).toBeGreaterThan(0);
+    });
   });
 
   test('should add product to cart', async ({ dashboardPage }) => {
-    await dashboardPage.addProductToCart(products.adidasOriginal);
-    // Cart badge should update
+    await test.step(`Add product "${products.adidasOriginal}" to cart`, async () => {
+      await dashboardPage.addProductToCart(products.adidasOriginal);
+    });
   });
 
   test('should navigate to cart page', async ({ dashboardPage, page }) => {
-    await dashboardPage.goToCart();
-    await page.waitForURL('**/cart');
-    expect(page.url()).toContain(urls.cart);
+    await test.step('Go to cart page from dashboard', async () => {
+      await dashboardPage.goToCart();
+      await page.waitForURL('**/cart');
+      expect(page.url()).toContain(urls.cart);
+    });
   });
 
   test('should navigate to orders page', async ({ dashboardPage, page }) => {
-    await dashboardPage.goToOrders();
-    await page.waitForURL('**/myorders');
-    expect(page.url()).toContain(urls.orders);
+    await test.step('Go to orders page from dashboard', async () => {
+      await dashboardPage.goToOrders();
+      await page.waitForURL('**/myorders');
+      expect(page.url()).toContain(urls.orders);
+    });
   });
 
   test('should sign out successfully', async ({ dashboardPage, page }) => {
-    await dashboardPage.signOut();
-    await page.waitForURL('**/auth/login');
-    expect(page.url()).toContain(urls.login);
+    await test.step('Sign out from dashboard', async () => {
+      await dashboardPage.signOut();
+      await page.waitForURL('**/auth/login');
+      expect(page.url()).toContain(urls.login);
+    });
   });
 });

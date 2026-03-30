@@ -7,19 +7,23 @@ test.describe('User Registration E2E (Hybrid)', () => {
     loginPage,
     page,
   }) => {
-    // Step 1: Register user via API
     const uniqueId = Date.now().toString();
     const payload = registration.buildPayload(uniqueId);
-    const response = await authAPI.register(payload);
-    expect(response.message).toContain(messages.registered);
 
-    // Step 2: Login via UI with the registered user
-    await loginPage.navigate();
-    await loginPage.login(payload.userEmail, payload.userPassword);
+    await test.step(`Register user via API: ${payload.userEmail}`, async () => {
+      const response = await authAPI.register(payload);
+      expect(response.message).toContain(messages.registered);
+    });
 
-    // Step 3: Verify user is on dashboard
-    await page.waitForURL('**/dash');
-    expect(page.url()).toContain(urls.dashboard);
+    await test.step(`Login via UI with: ${payload.userEmail}`, async () => {
+      await loginPage.navigate();
+      await loginPage.login(payload.userEmail, payload.userPassword);
+    });
+
+    await test.step('Verify user is on dashboard', async () => {
+      await page.waitForURL('**/dash');
+      expect(page.url()).toContain(urls.dashboard);
+    });
   });
 
   test('should verify product catalog after login', async ({
@@ -27,17 +31,22 @@ test.describe('User Registration E2E (Hybrid)', () => {
     dashboardPage,
     page,
   }) => {
-    // Login
-    await loginPage.navigate();
-    await loginPage.login(credentials.valid.email, credentials.valid.password);
-    await page.waitForURL('**/dash');
+    const userEmail = credentials.valid.email;
 
-    // Verify products are displayed
-    const productNames = await dashboardPage.getProductNames();
-    expect(productNames.length).toBeGreaterThan(0);
+    await test.step(`Login with: ${userEmail}`, async () => {
+      await loginPage.navigate();
+      await loginPage.login(userEmail, credentials.valid.password);
+      await page.waitForURL('**/dash');
+    });
 
-    // Verify specific product exists
-    const hasAdidas = await dashboardPage.isProductVisible(products.adidasOriginal);
-    expect(hasAdidas).toBeTruthy();
+    await test.step('Verify products are displayed', async () => {
+      const productNames = await dashboardPage.getProductNames();
+      expect(productNames.length).toBeGreaterThan(0);
+    });
+
+    await test.step(`Verify product "${products.adidasOriginal}" exists`, async () => {
+      const hasAdidas = await dashboardPage.isProductVisible(products.adidasOriginal);
+      expect(hasAdidas).toBeTruthy();
+    });
   });
 });

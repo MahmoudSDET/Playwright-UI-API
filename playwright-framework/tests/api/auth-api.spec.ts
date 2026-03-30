@@ -3,7 +3,6 @@ import { test, expect } from '../../src/fixtures/index';
 test.describe('Auth API Tests', () => {
   test('should login via API with valid credentials', async ({ authAPI }) => {
     const userEmail = 'testpom2026@example.com';
-    test.info().annotations.push({ type: 'userEmail', description: userEmail });
     await test.step(`Login with email: ${userEmail}`, async () => {
       const response = await authAPI.login({
         userEmail,
@@ -16,7 +15,6 @@ test.describe('Auth API Tests', () => {
 
   test('should fail login with invalid credentials', async ({ authAPI }) => {
     const userEmail = 'invalid@example.com';
-    test.info().annotations.push({ type: 'userEmail', description: userEmail });
     await test.step(`Login with email: ${userEmail}`, async () => {
       await expect(
         authAPI.login({ userEmail, userPassword: 'wrong' }),
@@ -27,7 +25,6 @@ test.describe('Auth API Tests', () => {
   test('should register a new user via API', async ({ authAPI }) => {
     const uniqueId = Date.now().toString();
     const userEmail = `testapi_${uniqueId}@example.com`;
-    test.info().annotations.push({ type: 'userEmail', description: userEmail });
     await test.step(`Register with email: ${userEmail}`, async () => {
       const response = await authAPI.register({
         firstName: 'Test',

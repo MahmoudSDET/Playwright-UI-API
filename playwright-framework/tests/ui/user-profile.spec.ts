@@ -9,25 +9,31 @@ test.describe('Orders Page Tests', () => {
   });
 
   test('should navigate to orders page', async ({ ordersPage, page }) => {
-    await ordersPage.navigate();
-    await page.waitForURL('**/myorders');
-    expect(page.url()).toContain(urls.orders);
+    await test.step('Navigate to orders page and verify URL', async () => {
+      await ordersPage.navigate();
+      await page.waitForURL('**/myorders');
+      expect(page.url()).toContain(urls.orders);
+    });
   });
 
   test('should display orders table or no-orders message', async ({ ordersPage }) => {
-    await ordersPage.navigate();
-    const orderCount = await ordersPage.getOrderCount();
-    if (orderCount === 0) {
-      expect(await ordersPage.hasNoOrders()).toBeTruthy();
-    } else {
-      expect(orderCount).toBeGreaterThan(0);
-    }
+    await test.step('Check orders table or no-orders message', async () => {
+      await ordersPage.navigate();
+      const orderCount = await ordersPage.getOrderCount();
+      if (orderCount === 0) {
+        expect(await ordersPage.hasNoOrders()).toBeTruthy();
+      } else {
+        expect(orderCount).toBeGreaterThan(0);
+      }
+    });
   });
 
   test('should navigate back to shop', async ({ ordersPage, page }) => {
-    await ordersPage.navigate();
-    await ordersPage.goBackToShop();
-    await page.waitForURL('**/dash');
-    expect(page.url()).toContain(urls.dashboard);
+    await test.step('Go back to shop from orders page', async () => {
+      await ordersPage.navigate();
+      await ordersPage.goBackToShop();
+      await page.waitForURL('**/dash');
+      expect(page.url()).toContain(urls.dashboard);
+    });
   });
 });

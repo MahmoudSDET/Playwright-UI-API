@@ -3,11 +3,12 @@ import { test, expect } from '../../src/fixtures/index';
 test.describe('Order API Tests', () => {
   let token: string;
   let userId: string;
+  const userEmail = 'testpom2026@example.com';
 
   test.beforeAll(async ({ request }) => {
     const response = await request.post('/api/ecom/auth/login', {
       data: {
-        userEmail: 'testpom2026@example.com',
+        userEmail,
         userPassword: 'Test@12345',
       },
     });
@@ -17,13 +18,17 @@ test.describe('Order API Tests', () => {
   });
 
   test('should get all products', async ({ orderAPI }) => {
-    const response = await orderAPI.getAllProducts(token);
-    expect(response.data).toBeDefined();
-    expect(response.data.length).toBeGreaterThan(0);
+    await test.step('Fetch all products via API', async () => {
+      const response = await orderAPI.getAllProducts(token);
+      expect(response.data).toBeDefined();
+      expect(response.data.length).toBeGreaterThan(0);
+    });
   });
 
   test('should get orders for customer', async ({ orderAPI }) => {
-    const response = await orderAPI.getOrdersForCustomer(userId, token);
-    expect(response.data).toBeDefined();
+    await test.step(`Fetch orders for customer: ${userId}`, async () => {
+      const response = await orderAPI.getOrdersForCustomer(userId, token);
+      expect(response.data).toBeDefined();
+    });
   });
 });

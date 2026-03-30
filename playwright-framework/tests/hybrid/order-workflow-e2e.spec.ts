@@ -12,36 +12,42 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
     ordersPage,
     page,
   }) => {
-    // Step 1: Login
-    await loginPage.navigate();
-    await loginPage.login(credentials.valid.email, credentials.valid.password);
-    await page.waitForURL('**/dash');
+    const userEmail = credentials.valid.email;
 
-    // Step 2: Add product to cart
-    await dashboardPage.addProductToCart(products.adidasOriginal);
+    await test.step(`Login with: ${userEmail}`, async () => {
+      await loginPage.navigate();
+      await loginPage.login(userEmail, credentials.valid.password);
+      await page.waitForURL('**/dash');
+    });
 
-    // Step 3: Go to cart
-    await dashboardPage.goToCart();
-    await page.waitForURL('**/cart');
-    const isInCart = await cartPage.isProductInCart(products.adidasOriginal);
-    expect(isInCart).toBeTruthy();
+    await test.step(`Add product "${products.adidasOriginal}" to cart`, async () => {
+      await dashboardPage.addProductToCart(products.adidasOriginal);
+    });
 
-    // Step 4: Checkout
-    await cartPage.checkout();
+    await test.step('Go to cart and verify product', async () => {
+      await dashboardPage.goToCart();
+      await page.waitForURL('**/cart');
+      const isInCart = await cartPage.isProductInCart(products.adidasOriginal);
+      expect(isInCart).toBeTruthy();
+    });
 
-    // Step 5: Select country and place order
-    await checkoutPage.selectCountry(checkout.countryPrefix);
-    await checkoutPage.placeOrder();
+    await test.step('Checkout and place order', async () => {
+      await cartPage.checkout();
+      await checkoutPage.selectCountry(checkout.countryPrefix);
+      await checkoutPage.placeOrder();
+    });
 
-    // Step 6: Verify order confirmation
-    const confirmationMsg = await checkoutPage.getConfirmationMessage();
-    expect(confirmationMsg.toLowerCase()).toContain(messages.orderConfirmation);
+    await test.step('Verify order confirmation', async () => {
+      const confirmationMsg = await checkoutPage.getConfirmationMessage();
+      expect(confirmationMsg.toLowerCase()).toContain(messages.orderConfirmation);
+    });
 
-    // Step 7: Verify order appears in Orders page
-    await checkoutPage.clickOrdersLink();
-    await page.waitForURL('**/myorders');
-    const orderCount = await ordersPage.getOrderCount();
-    expect(orderCount).toBeGreaterThan(0);
+    await test.step('Verify order appears in Orders page', async () => {
+      await checkoutPage.clickOrdersLink();
+      await page.waitForURL('**/myorders');
+      const orderCount = await ordersPage.getOrderCount();
+      expect(orderCount).toBeGreaterThan(0);
+    });
   });
 
   test('should add multiple products and complete checkout', async ({
@@ -51,24 +57,29 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
     checkoutPage,
     page,
   }) => {
-    // Login
-    await loginPage.navigate();
-    await loginPage.login(credentials.valid.email, credentials.valid.password);
-    await page.waitForURL('**/dash');
+    const userEmail = credentials.valid.email;
 
-    // Add multiple products
-    await dashboardPage.addProductToCart(products.zaraCoat3);
+    await test.step(`Login with: ${userEmail}`, async () => {
+      await loginPage.navigate();
+      await loginPage.login(userEmail, credentials.valid.password);
+      await page.waitForURL('**/dash');
+    });
 
-    // Go to cart and checkout
-    await dashboardPage.goToCart();
-    await page.waitForURL('**/cart');
-    await cartPage.checkout();
+    await test.step(`Add product "${products.zaraCoat3}" to cart`, async () => {
+      await dashboardPage.addProductToCart(products.zaraCoat3);
+    });
 
-    // Place order
-    await checkoutPage.selectCountry(checkout.countryPrefix);
-    await checkoutPage.placeOrder();
+    await test.step('Go to cart and checkout', async () => {
+      await dashboardPage.goToCart();
+      await page.waitForURL('**/cart');
+      await cartPage.checkout();
+    });
 
-    const confirmationMsg = await checkoutPage.getConfirmationMessage();
-    expect(confirmationMsg.toLowerCase()).toContain(messages.orderConfirmation);
+    await test.step('Place order and verify confirmation', async () => {
+      await checkoutPage.selectCountry(checkout.countryPrefix);
+      await checkoutPage.placeOrder();
+      const confirmationMsg = await checkoutPage.getConfirmationMessage();
+      expect(confirmationMsg.toLowerCase()).toContain(messages.orderConfirmation);
+    });
   });
 });

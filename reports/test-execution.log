@@ -28,3 +28,26 @@
 [2026-03-30 12:20:20] ERROR: API Error [400]: {"message":"Incorrect email or password."}
 [2026-03-30 12:20:39] INFO: POST /api/ecom/auth/login
 [2026-03-30 12:20:40] INFO: Response [200]
+[2026-03-30 18:32:31] INFO: ▶ Starting test: "should add multiple products and complete checkout" [order-workflow-e2e.spec.ts]
+[2026-03-30 18:32:32] INFO: Navigating to #/auth/login
+[2026-03-30 18:32:34] INFO: Logging in as testpom2026@example.com
+[2026-03-30 18:32:35] INFO: Adding ZARA COAT 3 to cart
+[2026-03-30 18:32:35] INFO: Navigating to cart
+[2026-03-30 18:32:37] INFO: Proceeding to checkout
+[2026-03-30 18:32:37] INFO: Selecting country starting with: Ind
+[2026-03-30 18:32:38] INFO: Placing order
+[2026-03-30 18:32:38] INFO: 📋 Test annotations for "should add multiple products and complete checkout":
+[2026-03-30 18:32:38] INFO:    [feature]: Order Workflow E2E
+[2026-03-30 18:32:38] INFO:    [userEmail]: testpom2026@example.com
+[2026-03-30 18:32:38] INFO:    [product]: ZARA COAT 3
+[2026-03-30 18:32:38] INFO:    [action]: Multi-product checkout
+[2026-03-30 18:32:38] INFO: ✅ Test "should add multiple products and complete checkout" passed (6582ms)
+[2026-03-30 19:51:27] INFO: ▶ Starting test: "should show error for invalid credentials" [login.spec.ts] | Feature: Login Page Tests | Suite: ui | Project: chromium
+[2026-03-30 19:51:27] INFO: Navigating to #/auth/login
+[2026-03-30 19:51:30] INFO: Logging in as invalid@example.com
+[2026-03-30 19:51:31] INFO: 📋 Test annotations for "should show error for invalid credentials":
+[2026-03-30 19:51:31] INFO:    [feature]: Login Page Tests
+[2026-03-30 19:51:31] INFO:    [suite]: ui
+[2026-03-30 19:51:31] INFO:    [file]: login.spec.ts
+[2026-03-30 19:51:31] INFO:    [project]: chromium
+[2026-03-30 19:51:31] INFO: ✅ Test "should show error for invalid credentials" passed (3402ms)
