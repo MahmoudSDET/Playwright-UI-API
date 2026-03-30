@@ -1,4 +1,5 @@
 import { test, expect } from '../../src/fixtures/index';
+import { credentials, products, checkout, messages } from '../../src/data/test-data';
 
 test.describe('Order Workflow E2E (Hybrid)', () => {
   test.describe.configure({ mode: 'serial' });
@@ -13,28 +14,28 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
   }) => {
     // Step 1: Login
     await loginPage.navigate();
-    await loginPage.login('testpom2026@example.com', 'Test@12345');
+    await loginPage.login(credentials.valid.email, credentials.valid.password);
     await page.waitForURL('**/dash');
 
     // Step 2: Add product to cart
-    await dashboardPage.addProductToCart('ADIDAS ORIGINAL');
+    await dashboardPage.addProductToCart(products.adidasOriginal);
 
     // Step 3: Go to cart
     await dashboardPage.goToCart();
     await page.waitForURL('**/cart');
-    const isInCart = await cartPage.isProductInCart('ADIDAS ORIGINAL');
+    const isInCart = await cartPage.isProductInCart(products.adidasOriginal);
     expect(isInCart).toBeTruthy();
 
     // Step 4: Checkout
     await cartPage.checkout();
 
     // Step 5: Select country and place order
-    await checkoutPage.selectCountry('Ind');
+    await checkoutPage.selectCountry(checkout.countryPrefix);
     await checkoutPage.placeOrder();
 
     // Step 6: Verify order confirmation
     const confirmationMsg = await checkoutPage.getConfirmationMessage();
-    expect(confirmationMsg.toLowerCase()).toContain('thankyou for the order');
+    expect(confirmationMsg.toLowerCase()).toContain(messages.orderConfirmation);
 
     // Step 7: Verify order appears in Orders page
     await checkoutPage.clickOrdersLink();
@@ -52,11 +53,11 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
   }) => {
     // Login
     await loginPage.navigate();
-    await loginPage.login('testpom2026@example.com', 'Test@12345');
+    await loginPage.login(credentials.valid.email, credentials.valid.password);
     await page.waitForURL('**/dash');
 
     // Add multiple products
-    await dashboardPage.addProductToCart('ZARA COAT 3');
+    await dashboardPage.addProductToCart(products.zaraCoat3);
 
     // Go to cart and checkout
     await dashboardPage.goToCart();
@@ -64,10 +65,10 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
     await cartPage.checkout();
 
     // Place order
-    await checkoutPage.selectCountry('Ind');
+    await checkoutPage.selectCountry(checkout.countryPrefix);
     await checkoutPage.placeOrder();
 
     const confirmationMsg = await checkoutPage.getConfirmationMessage();
-    expect(confirmationMsg.toLowerCase()).toContain('thankyou for the order');
+    expect(confirmationMsg.toLowerCase()).toContain(messages.orderConfirmation);
   });
 });

@@ -1,0 +1,8 @@
+{
+  "orderRows": "tbody tr",
+  "orderIds": "tbody tr th",
+  "viewButton": "tbody tr .btn-primary",
+  "noOrdersText": "text=No Orders",
+  "goBackToShopButton": "role=button[name=\"Go Back to Shop\"]",
+  "goBackToCartButton": "role=button[name=\"Go Back to Cart\"]"
+}

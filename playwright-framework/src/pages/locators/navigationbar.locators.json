@@ -1,0 +1,8 @@
+{
+  "root": ".navbar",
+  "homeButton": "button[routerlink=\"/dashboard/\"]",
+  "ordersButton": "button[routerlink=\"/dashboard/myorders\"]",
+  "cartButton": "button[routerlink=\"/dashboard/cart\"]",
+  "signOutButton": "button:has-text(\"Sign Out\")",
+  "cartBadge": "button[routerlink=\"/dashboard/cart\"] label"
+}

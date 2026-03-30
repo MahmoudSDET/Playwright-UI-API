@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from '../core/base/BasePage';
+import { CartLocators } from './locators';
 
 export class CartPage extends BasePage {
   readonly path = '#/dashboard/cart';
@@ -14,13 +15,13 @@ export class CartPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.cartItems = page.locator('.cartWrap .items');
-    this.cartItemTitles = page.locator('.cartWrap .items h3');
-    this.checkoutButton = page.getByRole('button', { name: /Checkout/ });
-    this.continueShoppingButton = page.getByRole('button', { name: /Continue Shopping/ });
-    this.cartHeading = page.locator('h1:has-text("My Cart")');
-    this.totalPrice = page.locator('.totalRow .value').last();
-    this.deleteButtons = page.locator('.btn-danger');
+    this.cartItems = page.locator(CartLocators.cartItems);
+    this.cartItemTitles = page.locator(CartLocators.cartItemTitles);
+    this.checkoutButton = page.locator(CartLocators.checkoutButton);
+    this.continueShoppingButton = page.locator(CartLocators.continueShoppingButton);
+    this.cartHeading = page.locator(CartLocators.cartHeading);
+    this.totalPrice = page.locator(CartLocators.totalPrice).last();
+    this.deleteButtons = page.locator(CartLocators.deleteButton);
   }
 
   async getCartItemCount(): Promise<number> {
@@ -39,7 +40,7 @@ export class CartPage extends BasePage {
   async removeProduct(productName: string): Promise<void> {
     this.logger.info(`Removing ${productName} from cart`);
     const item = this.cartItems.filter({ hasText: productName });
-    await item.locator('.btn-danger').click();
+    await item.locator(CartLocators.deleteButton).click();
   }
 
   async checkout(): Promise<void> {

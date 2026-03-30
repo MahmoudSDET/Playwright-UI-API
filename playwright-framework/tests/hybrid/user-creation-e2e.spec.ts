@@ -1,5 +1,5 @@
 import { test, expect } from '../../src/fixtures/index';
-import { TestDataFactory } from '../../src/data/factories/TestDataFactory';
+import { credentials, products, messages, urls, registration } from '../../src/data/test-data';
 
 test.describe('User Registration E2E (Hybrid)', () => {
   test('should register user via API and login via UI', async ({
@@ -9,26 +9,17 @@ test.describe('User Registration E2E (Hybrid)', () => {
   }) => {
     // Step 1: Register user via API
     const uniqueId = Date.now().toString();
-    const response = await authAPI.register({
-      firstName: 'E2E',
-      lastName: 'User',
-      userEmail: `e2euser_${uniqueId}@example.com`,
-      userPassword: 'Test@12345',
-      confirmPassword: 'Test@12345',
-      userMobile: '1234567890',
-      occupation: 'Student',
-      gender: 'Male',
-      required18: true,
-    });
-    expect(response.message).toContain('Registered');
+    const payload = registration.buildPayload(uniqueId);
+    const response = await authAPI.register(payload);
+    expect(response.message).toContain(messages.registered);
 
     // Step 2: Login via UI with the registered user
     await loginPage.navigate();
-    await loginPage.login(`e2euser_${uniqueId}@example.com`, 'Test@12345');
+    await loginPage.login(payload.userEmail, payload.userPassword);
 
     // Step 3: Verify user is on dashboard
     await page.waitForURL('**/dash');
-    expect(page.url()).toContain('#/dashboard/dash');
+    expect(page.url()).toContain(urls.dashboard);
   });
 
   test('should verify product catalog after login', async ({
@@ -38,7 +29,7 @@ test.describe('User Registration E2E (Hybrid)', () => {
   }) => {
     // Login
     await loginPage.navigate();
-    await loginPage.login('testpom2026@example.com', 'Test@12345');
+    await loginPage.login(credentials.valid.email, credentials.valid.password);
     await page.waitForURL('**/dash');
 
     // Verify products are displayed
@@ -46,7 +37,7 @@ test.describe('User Registration E2E (Hybrid)', () => {
     expect(productNames.length).toBeGreaterThan(0);
 
     // Verify specific product exists
-    const hasAdidas = await dashboardPage.isProductVisible('ADIDAS ORIGINAL');
+    const hasAdidas = await dashboardPage.isProductVisible(products.adidasOriginal);
     expect(hasAdidas).toBeTruthy();
   });
 });

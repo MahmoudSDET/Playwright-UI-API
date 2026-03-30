@@ -1,0 +1,6 @@
+{
+  "defaultRoot": "table",
+  "rows": "tbody tr",
+  "headers": "thead th",
+  "cell": "td"
+}

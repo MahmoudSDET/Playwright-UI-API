@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BaseComponent } from '../../core/base/BaseComponent';
+import { NavigationBarLocators } from '../locators';
 
 export class NavigationBar extends BaseComponent {
   private readonly homeButton: Locator;
@@ -9,13 +10,13 @@ export class NavigationBar extends BaseComponent {
   private readonly cartBadge: Locator;
 
   constructor(page: Page) {
-    const root = page.locator('.navbar');
+    const root = page.locator(NavigationBarLocators.root);
     super(page, root);
-    this.homeButton = root.locator('button[routerlink="/dashboard/"]');
-    this.ordersButton = root.locator('button[routerlink="/dashboard/myorders"]');
-    this.cartButton = root.locator('button[routerlink="/dashboard/cart"]');
-    this.signOutButton = root.locator('button:has-text("Sign Out")');
-    this.cartBadge = root.locator('button[routerlink="/dashboard/cart"] label');
+    this.homeButton = root.locator(NavigationBarLocators.homeButton);
+    this.ordersButton = root.locator(NavigationBarLocators.ordersButton);
+    this.cartButton = root.locator(NavigationBarLocators.cartButton);
+    this.signOutButton = root.locator(NavigationBarLocators.signOutButton);
+    this.cartBadge = root.locator(NavigationBarLocators.cartBadge);
   }
 
   async goHome(): Promise<void> {

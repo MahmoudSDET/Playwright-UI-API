@@ -1,0 +1,42 @@
+{
+  "credentials": {
+    "valid": {
+      "email": "testpom2026@example.com",
+      "password": "Test@12345"
+    },
+    "invalid": {
+      "email": "invalid@example.com",
+      "password": "wrong_password"
+    }
+  },
+  "products": {
+    "adidasOriginal": "ADIDAS ORIGINAL",
+    "zaraCoat3": "ZARA COAT 3",
+    "iphone13Pro": "iphone 13 pro"
+  },
+  "checkout": {
+    "countryPrefix": "Ind"
+  },
+  "messages": {
+    "invalidLogin": "Incorrect email or password",
+    "orderConfirmation": "thankyou for the order",
+    "registered": "Registered"
+  },
+  "urls": {
+    "dashboard": "#/dashboard/dash",
+    "cart": "#/dashboard/cart",
+    "orders": "#/dashboard/myorders",
+    "login": "#/auth/login"
+  },
+  "registration": {
+    "firstName": "E2E",
+    "lastName": "User",
+    "password": "Test@12345",
+    "confirmPassword": "Test@12345",
+    "phone": "1234567890",
+    "occupation": "Student",
+    "gender": "Male",
+    "required18": true,
+    "emailTemplate": "e2euser_{{uniqueId}}@example.com"
+  }
+}

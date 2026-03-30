@@ -1,13 +1,14 @@
 import { Page, Locator } from '@playwright/test';
 import { BaseComponent } from '../../core/base/BaseComponent';
+import { ToastLocators } from '../locators';
 
 export class Toast extends BaseComponent {
   private readonly message: Locator;
 
   constructor(page: Page) {
-    const root = page.locator('.toast-container');
+    const root = page.locator(ToastLocators.container);
     super(page, root);
-    this.message = root.locator('.toast-message');
+    this.message = root.locator(ToastLocators.message);
   }
 
   async getMessage(): Promise<string> {
@@ -16,11 +17,11 @@ export class Toast extends BaseComponent {
   }
 
   async isSuccessVisible(): Promise<boolean> {
-    return this.root.locator('.toast-success').isVisible();
+    return this.root.locator(ToastLocators.success).isVisible();
   }
 
   async isErrorVisible(): Promise<boolean> {
-    return this.root.locator('.toast-error').isVisible();
+    return this.root.locator(ToastLocators.error).isVisible();
   }
 
   async waitForToast(): Promise<void> {

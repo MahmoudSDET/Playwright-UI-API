@@ -1,16 +1,17 @@
 import { test, expect } from '../../src/fixtures/index';
+import { credentials, urls } from '../../src/data/test-data';
 
 test.describe('Orders Page Tests', () => {
   test.beforeEach(async ({ loginPage, page }) => {
     await loginPage.navigate();
-    await loginPage.login('testpom2026@example.com', 'Test@12345');
+    await loginPage.login(credentials.valid.email, credentials.valid.password);
     await page.waitForURL('**/dash', { timeout: 15000 });
   });
 
   test('should navigate to orders page', async ({ ordersPage, page }) => {
     await ordersPage.navigate();
     await page.waitForURL('**/myorders');
-    expect(page.url()).toContain('#/dashboard/myorders');
+    expect(page.url()).toContain(urls.orders);
   });
 
   test('should display orders table or no-orders message', async ({ ordersPage }) => {
@@ -27,6 +28,6 @@ test.describe('Orders Page Tests', () => {
     await ordersPage.navigate();
     await ordersPage.goBackToShop();
     await page.waitForURL('**/dash');
-    expect(page.url()).toContain('#/dashboard/dash');
+    expect(page.url()).toContain(urls.dashboard);
   });
 });

@@ -1,0 +1,9 @@
+{
+  "countryInput": "input[placeholder=\"Select Country\"]",
+  "countryOptions": ".ta-results button",
+  "placeOrderButton": ".btnn",
+  "emailLabel": ".user__name .txt",
+  "orderConfirmationMessage": ".hero-primary",
+  "ordersLink": "label[routerlink=\"/dashboard/myorders\"]",
+  "orderIdRows": "label.ng-star-inserted"
+}

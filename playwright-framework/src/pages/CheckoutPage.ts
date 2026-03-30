@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from '../core/base/BasePage';
+import { CheckoutLocators } from './locators';
 
 export class CheckoutPage extends BasePage {
   readonly path = '#/dashboard/order';
@@ -13,12 +14,12 @@ export class CheckoutPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.countryInput = page.locator('input[placeholder="Select Country"]');
-    this.countryOptions = page.locator('.ta-results button');
-    this.placeOrderButton = page.locator('.btnn');
-    this.emailLabel = page.locator('.user__name .txt');
-    this.orderConfirmationMessage = page.locator('.hero-primary');
-    this.ordersLink = page.locator('label[routerlink="/dashboard/myorders"]');
+    this.countryInput = page.locator(CheckoutLocators.countryInput);
+    this.countryOptions = page.locator(CheckoutLocators.countryOptions);
+    this.placeOrderButton = page.locator(CheckoutLocators.placeOrderButton);
+    this.emailLabel = page.locator(CheckoutLocators.emailLabel);
+    this.orderConfirmationMessage = page.locator(CheckoutLocators.orderConfirmationMessage);
+    this.ordersLink = page.locator(CheckoutLocators.ordersLink);
   }
 
   async selectCountry(countryPrefix: string): Promise<void> {
@@ -50,7 +51,7 @@ export class CheckoutPage extends BasePage {
   }
 
   async getOrderId(): Promise<string> {
-    const rows = this.page.locator('label.ng-star-inserted');
+    const rows = this.page.locator(CheckoutLocators.orderIdRows);
     await rows.first().waitFor({ state: 'visible' });
     return (await rows.first().textContent())?.trim() ?? '';
   }

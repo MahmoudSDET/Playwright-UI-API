@@ -1,0 +1,17 @@
+import LoginLocatorsJson from './login.locators.json';
+import DashboardLocatorsJson from './dashboard.locators.json';
+import CartLocatorsJson from './cart.locators.json';
+import CheckoutLocatorsJson from './checkout.locators.json';
+import OrdersLocatorsJson from './orders.locators.json';
+import NavigationBarLocatorsJson from './navigationbar.locators.json';
+import DataTableLocatorsJson from './datatable.locators.json';
+import ToastLocatorsJson from './toast.locators.json';
+
+export const LoginLocators = LoginLocatorsJson;
+export const DashboardLocators = DashboardLocatorsJson;
+export const CartLocators = CartLocatorsJson;
+export const CheckoutLocators = CheckoutLocatorsJson;
+export const OrdersLocators = OrdersLocatorsJson;
+export const NavigationBarLocators = NavigationBarLocatorsJson;
+export const DataTableLocators = DataTableLocatorsJson;
+export const ToastLocators = ToastLocatorsJson;

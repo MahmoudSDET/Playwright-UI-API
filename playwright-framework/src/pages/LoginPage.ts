@@ -1,10 +1,10 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from '../core/base/BasePage';
+import { LoginLocators } from './locators';
 
 export class LoginPage extends BasePage {
   readonly path = '#/auth/login';
 
-  // Locators
   private readonly emailInput: Locator;
   private readonly passwordInput: Locator;
   private readonly loginButton: Locator;
@@ -14,12 +14,12 @@ export class LoginPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.emailInput = page.locator('#userEmail');
-    this.passwordInput = page.locator('#userPassword');
-    this.loginButton = page.locator('#login');
-    this.errorToast = page.locator('.toast-error .toast-message');
-    this.forgotPasswordLink = page.locator('a[href*="password-new"]');
-    this.registerLink = page.locator('a[href*="register"]');
+    this.emailInput = page.locator(LoginLocators.emailInput);
+    this.passwordInput = page.locator(LoginLocators.passwordInput);
+    this.loginButton = page.locator(LoginLocators.loginButton);
+    this.errorToast = page.locator(LoginLocators.errorToast);
+    this.forgotPasswordLink = page.locator(LoginLocators.forgotPasswordLink);
+    this.registerLink = page.locator(LoginLocators.registerLink);
   }
 
   async login(email: string, password: string): Promise<void> {

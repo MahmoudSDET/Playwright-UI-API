@@ -1,0 +1,8 @@
+{
+  "emailInput": "#userEmail",
+  "passwordInput": "#userPassword",
+  "loginButton": "#login",
+  "errorToast": ".toast-error .toast-message",
+  "forgotPasswordLink": "a[href*=\"password-new\"]",
+  "registerLink": "a[href*=\"register\"]"
+}

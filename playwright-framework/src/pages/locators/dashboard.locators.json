@@ -1,0 +1,14 @@
+{
+  "productCards": ".card",
+  "productNames": ".card-body h5 b",
+  "productPrices": ".card-body .text-muted",
+  "addToCartButton": ".btn.w-10",
+  "viewButton": ".btn.w-40",
+  "searchInput": "input[placeholder=\"search\"]",
+  "cartButton": "button[routerlink=\"/dashboard/cart\"]",
+  "cartBadge": "button[routerlink=\"/dashboard/cart\"] span",
+  "ordersButton": "button[routerlink=\"/dashboard/myorders\"]",
+  "homeButton": "button[routerlink=\"/dashboard/\"]",
+  "spinner": ".ngx-spinner-overlay",
+  "signOutButton": "role=button[name=\"Sign Out\"]"
+}

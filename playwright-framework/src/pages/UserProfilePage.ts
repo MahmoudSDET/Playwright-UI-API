@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from '../core/base/BasePage';
+import { OrdersLocators } from './locators';
 
 export class OrdersPage extends BasePage {
   readonly path = '#/dashboard/myorders';
@@ -13,12 +14,12 @@ export class OrdersPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.orderRows = page.locator('tbody tr');
-    this.orderIds = page.locator('tbody tr th');
-    this.viewButtons = page.locator('tbody tr .btn-primary');
-    this.noOrdersText = page.locator('text=No Orders');
-    this.goBackToShopButton = page.getByRole('button', { name: 'Go Back to Shop' });
-    this.goBackToCartButton = page.getByRole('button', { name: 'Go Back to Cart' });
+    this.orderRows = page.locator(OrdersLocators.orderRows);
+    this.orderIds = page.locator(OrdersLocators.orderIds);
+    this.viewButtons = page.locator(OrdersLocators.viewButton);
+    this.noOrdersText = page.locator(OrdersLocators.noOrdersText);
+    this.goBackToShopButton = page.locator(OrdersLocators.goBackToShopButton);
+    this.goBackToCartButton = page.locator(OrdersLocators.goBackToCartButton);
   }
 
   private async waitForContent(): Promise<void> {
@@ -46,7 +47,7 @@ export class OrdersPage extends BasePage {
   async viewOrderById(orderId: string): Promise<void> {
     this.logger.info(`Viewing order: ${orderId}`);
     const row = this.orderRows.filter({ hasText: orderId });
-    await row.locator('.btn-primary').click();
+    await row.locator(OrdersLocators.viewButton).click();
   }
 
   async hasNoOrders(): Promise<boolean> {

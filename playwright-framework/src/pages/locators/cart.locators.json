@@ -1,0 +1,9 @@
+{
+  "cartItems": ".cartWrap .items",
+  "cartItemTitles": ".cartWrap .items h3",
+  "cartHeading": "h1:has-text(\"My Cart\")",
+  "totalPrice": ".totalRow .value",
+  "deleteButton": ".btn-danger",
+  "checkoutButton": "role=button[name=/Checkout/]",
+  "continueShoppingButton": "role=button[name=/Continue Shopping/]"
+}

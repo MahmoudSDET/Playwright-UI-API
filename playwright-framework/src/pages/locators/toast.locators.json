@@ -1,0 +1,6 @@
+{
+  "container": ".toast-container",
+  "message": ".toast-message",
+  "success": ".toast-success",
+  "error": ".toast-error"
+}

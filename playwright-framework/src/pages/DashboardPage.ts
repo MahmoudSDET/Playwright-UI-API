@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from '../core/base/BasePage';
+import { DashboardLocators } from './locators';
 
 export class DashboardPage extends BasePage {
   readonly path = '#/dashboard/dash';
@@ -18,17 +19,17 @@ export class DashboardPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.productCards = page.locator('.card');
-    this.productNames = page.locator('.card-body h5 b');
-    this.productPrices = page.locator('.card-body .text-muted');
-    this.addToCartButtons = page.locator('.btn.w-10');
-    this.viewButtons = page.locator('.btn.w-40');
-    this.searchInput = page.locator('input[placeholder="search"]');
-    this.cartButton = page.locator('button[routerlink="/dashboard/cart"]');
-    this.cartBadge = page.locator('button[routerlink="/dashboard/cart"] span');
-    this.signOutButton = page.getByRole('button', { name: 'Sign Out' });
-    this.ordersButton = page.locator('button[routerlink="/dashboard/myorders"]');
-    this.homeButton = page.locator('button[routerlink="/dashboard/"]');
+    this.productCards = page.locator(DashboardLocators.productCards);
+    this.productNames = page.locator(DashboardLocators.productNames);
+    this.productPrices = page.locator(DashboardLocators.productPrices);
+    this.addToCartButtons = page.locator(DashboardLocators.addToCartButton);
+    this.viewButtons = page.locator(DashboardLocators.viewButton);
+    this.searchInput = page.locator(DashboardLocators.searchInput);
+    this.cartButton = page.locator(DashboardLocators.cartButton);
+    this.cartBadge = page.locator(DashboardLocators.cartBadge);
+    this.signOutButton = page.locator(DashboardLocators.signOutButton);
+    this.ordersButton = page.locator(DashboardLocators.ordersButton);
+    this.homeButton = page.locator(DashboardLocators.homeButton);
   }
 
   async getProductCount(): Promise<number> {
@@ -42,14 +43,14 @@ export class DashboardPage extends BasePage {
   }
 
   private async waitForSpinner(): Promise<void> {
-    await this.page.locator('.ngx-spinner-overlay').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
+    await this.page.locator(DashboardLocators.spinner).waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
   }
 
   async addProductToCart(productName: string): Promise<void> {
     this.logger.info(`Adding ${productName} to cart`);
     await this.waitForSpinner();
     const card = this.productCards.filter({ hasText: productName });
-    await card.locator('.btn.w-10').click();
+    await card.locator(DashboardLocators.addToCartButton).click();
     await this.waitForSpinner();
   }
 
@@ -61,7 +62,7 @@ export class DashboardPage extends BasePage {
   async viewProduct(productName: string): Promise<void> {
     this.logger.info(`Viewing product: ${productName}`);
     const card = this.productCards.filter({ hasText: productName });
-    await card.locator('.btn.w-40').click();
+    await card.locator(DashboardLocators.viewButton).click();
   }
 
   async searchProduct(keyword: string): Promise<void> {
