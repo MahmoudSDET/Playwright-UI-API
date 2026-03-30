@@ -1,0 +1,111 @@
+[2026-03-30 23:48:10] INFO: ▶ Starting test: "should complete full order workflow via UI" [order-workflow-e2e.spec.ts] | Feature: Order Workflow E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:48:10] INFO: 📋 Test annotations for "should complete full order workflow via UI":
+[2026-03-30 23:48:10] INFO:    [feature]: Order Workflow E2E (Hybrid)
+[2026-03-30 23:48:10] INFO:    [suite]: hybrid
+[2026-03-30 23:48:10] INFO:    [file]: order-workflow-e2e.spec.ts
+[2026-03-30 23:48:10] INFO:    [project]: chromium
+[2026-03-30 23:48:10] INFO: ❌ Test "should complete full order workflow via UI" failed (62ms)
+[2026-03-30 23:49:00] INFO: ▶ Starting test: "should complete full order workflow via UI" [order-workflow-e2e.spec.ts] | Feature: Order Workflow E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:49:00] INFO: Navigating to #/auth/login
+[2026-03-30 23:49:03] INFO: Logging in as testpom2026@example.com
+[2026-03-30 23:49:03] INFO: Adding ADIDAS ORIGINAL to cart
+[2026-03-30 23:49:04] INFO: Navigating to cart
+[2026-03-30 23:49:06] INFO: Proceeding to checkout
+[2026-03-30 23:49:06] INFO: Selecting country starting with: Ind
+[2026-03-30 23:49:07] INFO: Placing order
+[2026-03-30 23:49:07] INFO: 📋 Test annotations for "should complete full order workflow via UI":
+[2026-03-30 23:49:07] INFO:    [feature]: Order Workflow E2E (Hybrid)
+[2026-03-30 23:49:07] INFO:    [suite]: hybrid
+[2026-03-30 23:49:07] INFO:    [file]: order-workflow-e2e.spec.ts
+[2026-03-30 23:49:07] INFO:    [project]: chromium
+[2026-03-30 23:49:07] INFO: ✅ Test "should complete full order workflow via UI" passed (7171ms)
+[2026-03-30 23:49:07] INFO: ▶ Starting test: "should add multiple products and complete checkout" [order-workflow-e2e.spec.ts] | Feature: Order Workflow E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:49:07] INFO: Navigating to #/auth/login
+[2026-03-30 23:49:08] INFO: Logging in as testpom2026@example.com
+[2026-03-30 23:49:08] INFO: Adding ZARA COAT 3 to cart
+[2026-03-30 23:49:08] INFO: Navigating to cart
+[2026-03-30 23:49:10] INFO: Proceeding to checkout
+[2026-03-30 23:49:11] INFO: Selecting country starting with: Ind
+[2026-03-30 23:49:11] INFO: Placing order
+[2026-03-30 23:49:12] INFO: 📋 Test annotations for "should add multiple products and complete checkout":
+[2026-03-30 23:49:12] INFO:    [feature]: Order Workflow E2E (Hybrid)
+[2026-03-30 23:49:12] INFO:    [suite]: hybrid
+[2026-03-30 23:49:12] INFO:    [file]: order-workflow-e2e.spec.ts
+[2026-03-30 23:49:12] INFO:    [project]: chromium
+[2026-03-30 23:49:12] INFO: ✅ Test "should add multiple products and complete checkout" passed (4210ms)
+[2026-03-30 23:51:36] INFO: ▶ Starting test: "should complete full order workflow via UI" [order-workflow-e2e.spec.ts] | Feature: Order Workflow E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:51:36] INFO: Navigating to #/auth/login
+[2026-03-30 23:51:39] INFO: Logging in as testpom2026@example.com
+[2026-03-30 23:51:40] INFO: Adding ADIDAS ORIGINAL to cart
+[2026-03-30 23:51:40] INFO: Navigating to cart
+[2026-03-30 23:51:42] INFO: Proceeding to checkout
+[2026-03-30 23:51:42] INFO: Selecting country starting with: Ind
+[2026-03-30 23:51:43] INFO: Placing order
+[2026-03-30 23:51:43] INFO: 📋 Test annotations for "should complete full order workflow via UI":
+[2026-03-30 23:51:43] INFO:    [feature]: Order Workflow E2E (Hybrid)
+[2026-03-30 23:51:43] INFO:    [suite]: hybrid
+[2026-03-30 23:51:43] INFO:    [file]: order-workflow-e2e.spec.ts
+[2026-03-30 23:51:43] INFO:    [project]: chromium
+[2026-03-30 23:51:43] INFO: ✅ Test "should complete full order workflow via UI" passed (6999ms)
+[2026-03-30 23:51:43] INFO: ▶ Starting test: "should add multiple products and complete checkout" [order-workflow-e2e.spec.ts] | Feature: Order Workflow E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:51:43] INFO: Navigating to #/auth/login
+[2026-03-30 23:51:44] INFO: Logging in as testpom2026@example.com
+[2026-03-30 23:51:44] INFO: Adding ZARA COAT 3 to cart
+[2026-03-30 23:51:44] INFO: Navigating to cart
+[2026-03-30 23:51:46] INFO: Proceeding to checkout
+[2026-03-30 23:51:47] INFO: Selecting country starting with: Ind
+[2026-03-30 23:51:47] INFO: Placing order
+[2026-03-30 23:51:48] INFO: 📋 Test annotations for "should add multiple products and complete checkout":
+[2026-03-30 23:51:48] INFO:    [feature]: Order Workflow E2E (Hybrid)
+[2026-03-30 23:51:48] INFO:    [suite]: hybrid
+[2026-03-30 23:51:48] INFO:    [file]: order-workflow-e2e.spec.ts
+[2026-03-30 23:51:48] INFO:    [project]: chromium
+[2026-03-30 23:51:48] INFO: ✅ Test "should add multiple products and complete checkout" passed (4172ms)
+[2026-03-30 23:53:17] INFO: ▶ Starting test: "should complete full order workflow via UI" [order-workflow-e2e.spec.ts] | Feature: Order Workflow E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:53:17] INFO: Navigating to #/auth/login
+[2026-03-30 23:53:20] INFO: Logging in as testpom2026@example.com
+[2026-03-30 23:53:21] INFO: Adding ADIDAS ORIGINAL to cart
+[2026-03-30 23:53:23] INFO: Navigating to cart
+[2026-03-30 23:53:24] INFO: Proceeding to checkout
+[2026-03-30 23:53:24] INFO: Selecting country starting with: Ind
+[2026-03-30 23:53:24] INFO: Placing order
+[2026-03-30 23:53:25] INFO: 📋 Test annotations for "should complete full order workflow via UI":
+[2026-03-30 23:53:25] INFO:    [feature]: Order Workflow E2E (Hybrid)
+[2026-03-30 23:53:25] INFO:    [suite]: hybrid
+[2026-03-30 23:53:25] INFO:    [file]: order-workflow-e2e.spec.ts
+[2026-03-30 23:53:25] INFO:    [project]: chromium
+[2026-03-30 23:53:25] INFO: ✅ Test "should complete full order workflow via UI" passed (8132ms)
+[2026-03-30 23:53:25] INFO: ▶ Starting test: "should add multiple products and complete checkout" [order-workflow-e2e.spec.ts] | Feature: Order Workflow E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:53:25] INFO: Navigating to #/auth/login
+[2026-03-30 23:53:26] INFO: Logging in as testpom2026@example.com
+[2026-03-30 23:53:26] INFO: Adding ZARA COAT 3 to cart
+[2026-03-30 23:53:26] INFO: Navigating to cart
+[2026-03-30 23:53:28] INFO: Proceeding to checkout
+[2026-03-30 23:53:29] INFO: Selecting country starting with: Ind
+[2026-03-30 23:53:29] INFO: Placing order
+[2026-03-30 23:53:30] INFO: 📋 Test annotations for "should add multiple products and complete checkout":
+[2026-03-30 23:53:30] INFO:    [feature]: Order Workflow E2E (Hybrid)
+[2026-03-30 23:53:30] INFO:    [suite]: hybrid
+[2026-03-30 23:53:30] INFO:    [file]: order-workflow-e2e.spec.ts
+[2026-03-30 23:53:30] INFO:    [project]: chromium
+[2026-03-30 23:53:30] INFO: ✅ Test "should add multiple products and complete checkout" passed (4676ms)
+[2026-03-30 23:54:01] INFO: ▶ Starting test: "should register user via API and login via UI" [user-creation-e2e.spec.ts] | Feature: User Registration E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:54:02] INFO: POST /api/ecom/auth/register
+[2026-03-30 23:54:02] INFO: Response [200]
+[2026-03-30 23:54:02] INFO: Navigating to #/auth/login
+[2026-03-30 23:54:04] INFO: Logging in as e2euser_1774907642094@example.com
+[2026-03-30 23:54:05] INFO: 📋 Test annotations for "should register user via API and login via UI":
+[2026-03-30 23:54:05] INFO:    [feature]: User Registration E2E (Hybrid)
+[2026-03-30 23:54:05] INFO:    [suite]: hybrid
+[2026-03-30 23:54:05] INFO:    [file]: user-creation-e2e.spec.ts
+[2026-03-30 23:54:05] INFO:    [project]: chromium
+[2026-03-30 23:54:05] INFO: ✅ Test "should register user via API and login via UI" passed (3586ms)
+[2026-03-30 23:54:05] INFO: ▶ Starting test: "should verify product catalog after login" [user-creation-e2e.spec.ts] | Feature: User Registration E2E (Hybrid) | Suite: hybrid | Project: chromium
+[2026-03-30 23:54:05] INFO: Navigating to #/auth/login
+[2026-03-30 23:54:06] INFO: Logging in as testpom2026@example.com
+[2026-03-30 23:54:08] INFO: 📋 Test annotations for "should verify product catalog after login":
+[2026-03-30 23:54:08] INFO:    [feature]: User Registration E2E (Hybrid)
+[2026-03-30 23:54:08] INFO:    [suite]: hybrid
+[2026-03-30 23:54:08] INFO:    [file]: user-creation-e2e.spec.ts
+[2026-03-30 23:54:08] INFO:    [project]: chromium
+[2026-03-30 23:54:08] INFO: ✅ Test "should verify product catalog after login" passed (2199ms)

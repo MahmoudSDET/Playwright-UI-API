@@ -1,21 +1,54 @@
 import { test, expect } from '../../src/fixtures/index';
 import { credentials, products, checkout, messages } from '../../src/data/test-data';
+import { BrowserContext, Page } from '@playwright/test';
+import { LoginPage } from '../../src/pages/LoginPage';
+import { DashboardPage } from '../../src/pages/DashboardPage';
+import { OrdersPage } from '../../src/pages/UserProfilePage';
+import { CartPage } from '../../src/pages/CartPage';
+import { CheckoutPage } from '../../src/pages/CheckoutPage';
 
 test.describe('Order Workflow E2E (Hybrid)', () => {
   test.describe.configure({ mode: 'serial' });
 
-  test('should complete full order workflow via UI', async ({
-    loginPage,
-    dashboardPage,
-    cartPage,
-    checkoutPage,
-    ordersPage,
-    page,
-  }) => {
+  let context: BrowserContext;
+  let page: Page;
+  let loginPage: LoginPage;
+  let dashboardPage: DashboardPage;
+  let ordersPage: OrdersPage;
+  let cartPage: CartPage;
+  let checkoutPage: CheckoutPage;
+
+  test.beforeAll(async ({ browser }) => {
+    context = await browser.newContext();
+    page = await context.newPage();
+    loginPage = new LoginPage(page);
+    dashboardPage = new DashboardPage(page);
+    ordersPage = new OrdersPage(page);
+    cartPage = new CartPage(page);
+    checkoutPage = new CheckoutPage(page);
+  });
+
+  test.beforeEach(async () => {
+    await context.clearCookies();
+    await loginPage.navigate();
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+  });
+
+  test.afterAll(async () => {
+    await page.close();
+    await context.close();
+  });
+
+  test('should complete full order workflow via UI', async () => {
     const userEmail = credentials.valid.email;
 
     await test.step(`Login with: ${userEmail}`, async () => {
-      await loginPage.navigate();
       await loginPage.login(userEmail, credentials.valid.password);
       await page.waitForURL('**/dash');
     });
@@ -50,17 +83,10 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
     });
   });
 
-  test('should add multiple products and complete checkout', async ({
-    loginPage,
-    dashboardPage,
-    cartPage,
-    checkoutPage,
-    page,
-  }) => {
+  test('should add multiple products and complete checkout', async () => {
     const userEmail = credentials.valid.email;
 
     await test.step(`Login with: ${userEmail}`, async () => {
-      await loginPage.navigate();
       await loginPage.login(userEmail, credentials.valid.password);
       await page.waitForURL('**/dash');
     });
