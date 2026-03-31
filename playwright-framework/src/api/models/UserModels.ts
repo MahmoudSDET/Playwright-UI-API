@@ -1,3 +1,6 @@
+﻿/**
+ * EN: Interface representing a user entity from the API.
+ */
 export interface User {
   _id: string;
   firstName: string;
@@ -9,6 +12,9 @@ export interface User {
   gender: string;
 }
 
+/**
+ * EN: Interface for creating a new user request.
+ */
 export interface CreateUserRequest {
   firstName: string;
   lastName: string;
@@ -21,6 +27,9 @@ export interface CreateUserRequest {
   required18: boolean;
 }
 
+/**
+ * EN: Interface for updating an existing user (partial fields).
+ */
 export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
@@ -28,6 +37,9 @@ export interface UpdateUserRequest {
   userMobile?: string;
 }
 
+/**
+ * EN: Interface for user API response wrapper.
+ */
 export interface UserResponse {
   data: User;
   message: string;

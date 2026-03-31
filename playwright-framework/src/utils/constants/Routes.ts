@@ -1,7 +1,8 @@
-/**
- * Application route constants.
+﻿/**
+ * EN: Application route constants for UI navigation and API endpoints.
  */
 export const Routes = {
+  // --- EN: UI Routes (hash-based SPA routing) | AR: Ù…Ø³Ø§Ø±Ø§Øª Ø§Ù„ÙˆØ§Ø¬Ù‡Ø© (ØªÙˆØ¬ÙŠÙ‡ SPA Ø¨Ø§Ù„Ù‡Ø§Ø´) ---
   HOME: '#/dashboard/dash',
   LOGIN: '#/auth/login',
   REGISTER: '#/auth/register',
@@ -11,7 +12,7 @@ export const Routes = {
   ORDER_DETAILS: '#/dashboard/order',
   FORGOT_PASSWORD: '#/auth/password-new',
 
-  // API Routes
+  // --- EN: API Routes | AR: Ù…Ø³Ø§Ø±Ø§Øª Ø§Ù„Ù€ API ---
   API: {
     AUTH_LOGIN: '/api/ecom/auth/login',
     AUTH_REGISTER: '/api/ecom/auth/register',

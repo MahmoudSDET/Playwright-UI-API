@@ -1,3 +1,4 @@
+﻿// EN: Import test fixtures, test data, and Playwright types
 import { test, expect } from '../../src/fixtures/index';
 import { credentials, products, checkout, messages } from '../../src/data/test-data';
 import { BrowserContext, Page } from '@playwright/test';
@@ -7,9 +8,17 @@ import { OrdersPage } from '../../src/pages/UserProfilePage';
 import { CartPage } from '../../src/pages/CartPage';
 import { CheckoutPage } from '../../src/pages/CheckoutPage';
 
+/**
+ * EN: Order Workflow E2E (Hybrid) - end-to-end test combining UI interactions.
+ *     Tests the full flow: login â†’ add to cart â†’ checkout â†’ verify order.
+ *     Uses serial mode with shared browser context.
+ *     ÙŠØ®ØªØ¨Ø± Ø§Ù„ØªØ¯ÙÙ‚ Ø§Ù„ÙƒØ§Ù…Ù„: Ø§Ù„Ø¯Ø®ÙˆÙ„ â†’ Ø¥Ø¶Ø§ÙØ© Ù„Ù„Ø³Ù„Ø© â†’ Ø§Ù„Ø¯ÙØ¹ â†’ ØªØ­Ù‚Ù‚ Ø§Ù„Ø·Ù„Ø¨.
+ *     ÙŠØ³ØªØ®Ø¯Ù… Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„ØªØ³Ù„Ø³Ù„ÙŠ Ù…Ø¹ Ø³ÙŠØ§Ù‚ Ù…ØªØµÙØ­ Ù…Ø´ØªØ±Ùƒ.
+ */
 test.describe('Order Workflow E2E (Hybrid)', () => {
   test.describe.configure({ mode: 'serial' });
 
+  // EN: Shared browser context and page objects | AR: Ø³ÙŠØ§Ù‚ Ù…ØªØµÙØ­ ÙˆÙƒØ§Ø¦Ù†Ø§Øª ØµÙØ­Ø§Øª Ù…Ø´ØªØ±ÙƒØ©
   let context: BrowserContext;
   let page: Page;
   let loginPage: LoginPage;
@@ -18,6 +27,7 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
   let cartPage: CartPage;
   let checkoutPage: CheckoutPage;
 
+  // EN: Create shared context and page objects once | AR: Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø³ÙŠØ§Ù‚ ÙˆÙƒØ§Ø¦Ù†Ø§Øª Ø§Ù„ØµÙØ­Ø§Øª Ø§Ù„Ù…Ø´ØªØ±ÙƒØ© Ù…Ø±Ø© ÙˆØ§Ø­Ø¯Ø©
   test.beforeAll(async ({ browser }) => {
     context = await browser.newContext();
     page = await context.newPage();
@@ -28,6 +38,7 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
     checkoutPage = new CheckoutPage(page);
   });
 
+  // EN: Clear cookies and storage before each test for clean state
   test.beforeEach(async () => {
     await context.clearCookies();
     await loginPage.navigate();
@@ -40,11 +51,13 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
     await page.waitForLoadState('networkidle');
   });
 
+  // EN: Cleanup: close page and context | AR: ØªÙ†Ø¸ÙŠÙ: Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØµÙØ­Ø© ÙˆØ§Ù„Ø³ÙŠØ§Ù‚
   test.afterAll(async () => {
     await page.close();
     await context.close();
   });
 
+  // EN: Full order workflow: login â†’ add to cart â†’ checkout â†’ verify
   test('should complete full order workflow via UI', async () => {
     const userEmail = credentials.valid.email;
 
@@ -83,6 +96,7 @@ test.describe('Order Workflow E2E (Hybrid)', () => {
     });
   });
 
+  // EN: Multiple products checkout flow | AR: ØªØ¯ÙÙ‚ Ø§Ù„Ø¯ÙØ¹ Ù„Ø¹Ø¯Ø© Ù…Ù†ØªØ¬Ø§Øª
   test('should add multiple products and complete checkout', async () => {
     const userEmail = credentials.valid.email;
 
