@@ -137,3 +137,47 @@
 [2026-03-31 00:01:13] INFO:    [file]: order-workflow-e2e.spec.ts
 [2026-03-31 00:01:13] INFO:    [project]: chromium
 [2026-03-31 00:01:13] INFO: ✅ Test "should add multiple products and complete checkout" passed (4801ms)
+[2026-04-01 00:08:35] INFO: POST /api/ecom/auth/login
+[2026-04-01 00:08:36] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 00:08:36] INFO: â–¶ Starting test: "should get all products" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:08:36] INFO: POST /api/ecom/product/get-all-products
+[2026-04-01 00:08:36] INFO: Response: 401 https://rahulshettyacademy.com/api/ecom/product/get-all-products
+[2026-04-01 00:08:36] ERROR: Client Error [401]: Session Timeout
+[2026-04-01 00:08:36] INFO: ðŸ“‹ Test annotations for "should get all products":
+[2026-04-01 00:08:36] INFO:    [feature]: Order API Tests
+[2026-04-01 00:08:36] INFO:    [suite]: api
+[2026-04-01 00:08:36] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:08:36] INFO:    [project]: chromium
+[2026-04-01 00:08:36] INFO: âŒ Test "should get all products" failed (174ms)
+[2026-04-01 00:08:37] INFO: POST /api/ecom/auth/login
+[2026-04-01 00:08:38] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 00:08:38] INFO: â–¶ Starting test: "should get orders for customer" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:08:38] INFO: GET /api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:08:38] INFO: Response: 401 https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:08:38] ERROR: Client Error [401]: Session Timeout
+[2026-04-01 00:08:38] INFO: ðŸ“‹ Test annotations for "should get orders for customer":
+[2026-04-01 00:08:38] INFO:    [feature]: Order API Tests
+[2026-04-01 00:08:38] INFO:    [suite]: api
+[2026-04-01 00:08:38] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:08:38] INFO:    [project]: chromium
+[2026-04-01 00:08:38] INFO: âŒ Test "should get orders for customer" failed (163ms)
+[2026-04-01 00:10:09] INFO: POST /api/ecom/auth/login
+[2026-04-01 00:10:10] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 00:10:10] INFO: â–¶ Starting test: "should get all products" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:10:10] INFO: POST /api/ecom/product/get-all-products
+[2026-04-01 00:10:10] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/product/get-all-products
+[2026-04-01 00:10:10] INFO: ðŸ“‹ Test annotations for "should get all products":
+[2026-04-01 00:10:10] INFO:    [feature]: Order API Tests
+[2026-04-01 00:10:10] INFO:    [suite]: api
+[2026-04-01 00:10:10] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:10:10] INFO:    [project]: chromium
+[2026-04-01 00:10:10] INFO: âœ… Test "should get all products" passed (200ms)
+[2026-04-01 00:10:10] INFO: â–¶ Starting test: "should get orders for customer" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:10:10] INFO: GET /api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:10:11] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:10:11] INFO: ðŸ“‹ Test annotations for "should get orders for customer":
+[2026-04-01 00:10:11] INFO:    [feature]: Order API Tests
+[2026-04-01 00:10:11] INFO:    [suite]: api
+[2026-04-01 00:10:11] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:10:11] INFO:    [project]: chromium
+[2026-04-01 00:10:11] INFO: âœ… Test "should get orders for customer" passed (169ms)

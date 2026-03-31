@@ -3,6 +3,7 @@ import { APIRequestContext } from '@playwright/test';
 // EN: Import the base API class and auth data models
 import { BaseAPI } from '../../core/base/BaseAPI';
 import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../models/AuthModels';
+import { RequestInterceptor } from '../interceptors/RequestInterceptor';
 
 /**
  * EN: API client for authentication endpoints (login, register).
@@ -12,9 +13,11 @@ export class AuthAPI extends BaseAPI {
     super(request);
   }
 
-  // EN: Login with credentials and return token + userId
+  // EN: Login with credentials, store token in RequestInterceptor, and return response
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    return this.post<LoginResponse>('/api/ecom/auth/login', credentials);
+    const response = await this.post<LoginResponse>('/api/ecom/auth/login', credentials);
+    RequestInterceptor.setAuthToken(response.token);
+    return response;
   }
 
   // EN: Register a new user account

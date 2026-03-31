@@ -29,27 +29,35 @@ Enterprise-grade test automation framework built with **Playwright** and the **P
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    TEST SUITES                       │
-│         (UI / API / Hybrid spec files)              │
-├─────────────────────────────────────────────────────┤
-│                     FIXTURES                         │
-│   base → auth → data → logging (merged via index)   │
-├──────────────────┬──────────────────────────────────┤
-│   PAGE OBJECTS   │         API CLIENTS              │
-│  LoginPage       │  AuthAPI, UserAPI, OrderAPI      │
-│  DashboardPage   ├──────────────────────────────────┤
-│  CartPage        │      SERVICES (Facades)          │
-│  CheckoutPage    │  AuthService, UserService        │
-│  UserProfilePage │                                  │
-├──────────────────┴──────────────────────────────────┤
-│                  CORE FRAMEWORK                      │
-│  BasePage │ BaseAPI │ BaseComponent │ BaseTest       │
-│  ConfigManager │ Logger │ Execution Strategies       │
-├─────────────────────────────────────────────────────┤
-│              UTILITIES & TEST DATA                   │
-│  Builders │ Factories │ Helpers │ Decorators │ Types │
-└─────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|                       TEST SUITES                            |
+|          (UI / API / Hybrid spec files)                      |
++-------------------------------------------------------------+
+|                      FIXTURE LAYER                           |
+|    base  ->  auth  ->  data  ->  logging (auto)              |
++-----------------------------+-------------------------------+
+|       PAGE OBJECTS          |         API CLIENTS            |
+|  LoginPage                  |  AuthAPI (sets token once)     |
+|  DashboardPage              |  UserAPI                       |
+|  CartPage                   |  OrderAPI                      |
+|  CheckoutPage               |                                |
+|  OrdersPage                 +-------------------------------+
+|                             |        INTERCEPTORS            |
+|                             |  RequestInterceptor (headers)  |
+|                             |  ResponseInterceptor (status)  |
++-----------------------------+-------------------------------+
+|       SERVICES (Facades)                                     |
+|  AuthService (UI vs API login)                               |
+|  UserService (register + view orders)                        |
++-------------------------------------------------------------+
+|                    CORE FRAMEWORK                             |
+|  BasePage | BaseAPI | BaseComponent | BaseTest               |
+|  ConfigManager (Singleton) | Logger (Singleton)              |
+|  Execution Strategies (Local | Staging | CI)                 |
++-------------------------------------------------------------+
+|               UTILITIES & TEST DATA                          |
+|  Builders | Factories | Helpers | Decorators | Types         |
++-------------------------------------------------------------+
 ```
 
 ---
@@ -70,7 +78,7 @@ playwright-framework/
 │   │   ├── base/
 │   │   │   ├── BasePage.ts           # Abstract base for all page objects
 │   │   │   ├── BaseComponent.ts      # Abstract base for reusable UI components
-│   │   │   ├── BaseAPI.ts            # Abstract base for API clients (GET/POST/PUT/DELETE)
+│   │   │   ├── BaseAPI.ts            # Abstract base for API clients + interceptor integration
 │   │   │   └── BaseTest.ts           # Extended Playwright test with logger
 │   │   ├── config/
 │   │   │   ├── ConfigManager.ts      # Singleton – loads environment-specific config
@@ -98,7 +106,7 @@ playwright-framework/
 │   │   ├── LoginPage.ts              # Login form interactions
 │   │   ├── DashboardPage.ts          # Product listing, cart, search
 │   │   ├── CartPage.ts               # Cart items, checkout trigger
-│   │   ├── CheckoutPage.ts           # Country selection, order placement
+│   │   ├── CheckoutPage.ts          # Country selection, order placement
 │   │   ├── UserProfilePage.ts        # Order history (OrdersPage)
 │   │   ├── components/               # Reusable UI components
 │   │   │   ├── NavigationBar.ts      # Top navbar (home, orders, cart, sign out)
@@ -117,12 +125,12 @@ playwright-framework/
 │   │
 │   ├── api/                          # LAYER 4: API testing layer
 │   │   ├── clients/
-│   │   │   ├── AuthAPI.ts            # Login, register endpoints
-│   │   │   ├── UserAPI.ts            # User CRUD endpoints
-│   │   │   └── OrderAPI.ts           # Product listing, order CRUD
+│   │   │   ├── AuthAPI.ts            # Login (auto-sets token), register
+│   │   │   ├── UserAPI.ts            # User registration, profile lookup
+│   │   │   └── OrderAPI.ts           # Products, order CRUD (no token params)
 │   │   ├── interceptors/
-│   │   │   ├── RequestInterceptor.ts # Auth header injection
-│   │   │   └── ResponseInterceptor.ts # Status parsing, error extraction
+│   │   │   ├── RequestInterceptor.ts # Static token + header management
+│   │   │   └── ResponseInterceptor.ts # Status classification, error extraction, logging
 │   │   └── models/
 │   │       ├── AuthModels.ts         # LoginRequest/Response, RegisterRequest/Response
 │   │       ├── UserModels.ts         # User, CreateUserRequest, UserResponse
@@ -178,7 +186,7 @@ playwright-framework/
 │   │
 │   └── hybrid/                       # UI + API combined E2E tests
 │       ├── order-workflow-e2e.spec.ts # Full order lifecycle (shared context)
-│       └── user-creation-e2e.spec.ts  # API registration → UI login verification
+│       └── user-creation-e2e.spec.ts  # API registration -> UI login verification
 │
 └── reports/                          # Generated output (gitignored)
     ├── allure-results/               # Raw Allure JSON results
@@ -201,7 +209,7 @@ The foundation layer that every other layer builds upon.
 |---|---|---|
 | **BasePage** | Template Method | Abstract base for all page objects. Provides `navigate()`, `click()`, `fill()`, `getText()`, `isVisible()`, `selectOption()`, `uploadFile()`, `takeScreenshot()`. Every method auto-waits for element visibility before acting. Injects Winston logger. |
 | **BaseComponent** | Composite | Abstract base for reusable UI components (navbar, table, modal). Scoped to a root locator so interactions are isolated to the component DOM subtree. Provides `isVisible()`, `waitForVisible()`, `waitForHidden()`. |
-| **BaseAPI** | Template Method + Adapter | Abstract base for API clients. Wraps Playwright's `request` context with typed `get<T>()`, `post<T>()`, `put<T>()`, `patch<T>()`, `delete<T>()` methods. Centralized `handleResponse()` throws on non-2xx with parsed error message. |
+| **BaseAPI** | Template Method + Interceptors | Abstract base for API clients. Wraps Playwright's `request` context with typed `get<T>()`, `post<T>()`, `put<T>()`, `patch<T>()`, `delete<T>()`, `getRaw()` methods. Every HTTP method calls `RequestInterceptor.getHeaders()` for automatic header injection. `handleResponse()` uses `ResponseInterceptor` for logging, status classification, and error extraction. Throws on non-2xx with parsed error message. |
 | **BaseTest** | Fixture Extension | Extends Playwright's `test` with an auto-injected `logger` fixture that logs test start/finish markers. |
 
 #### Configuration (`src/core/config/`)
@@ -209,9 +217,9 @@ The foundation layer that every other layer builds upon.
 **ConfigManager** is a singleton that loads environment-specific settings based on the `ENV` variable:
 
 ```
-ENV=local   → local.config.ts   → 30s timeout, 0 retries, headed mode
-ENV=staging → staging.config.ts → 45s timeout, 1 retry, headless mode
-ENV=production → production.config.ts → 60s timeout, 2 retries, headless mode
+ENV=local       -> local.config.ts      -> 30s timeout, 0 retries, headed mode
+ENV=staging     -> staging.config.ts    -> 45s timeout, 1 retry, headless mode
+ENV=production  -> production.config.ts -> 60s timeout, 2 retries, headless mode
 ```
 
 Each config defines: `baseURL`, `apiURL`, `timeout`, `retries`, `headless`, and `credentials`.
@@ -223,7 +231,7 @@ Winston-based singleton logger with two transports:
 - **Console** – colorized output with timestamps
 - **File** – writes to `reports/test-execution.log`
 
-Format: `[2026-03-31 00:43:54] INFO: Logging in as user@example.com`
+Format: `[2026-04-01 10:30:00] INFO: Logging in as user@example.com`
 
 Log level controlled by `LOG_LEVEL` env variable (default: `info`).
 
@@ -250,7 +258,7 @@ Playwright fixtures are layered and merged together. Tests import `{ test, expec
 | **base.fixture** | No | `loginPage`, `dashboardPage`, `ordersPage`, `cartPage`, `checkoutPage`, `authAPI`, `userAPI`, `orderAPI` – lazily instantiated per test |
 | **auth.fixture** | No | `authenticatedPage` – navigates to login, performs login using ConfigManager credentials. Call explicitly when needed. |
 | **data.fixture** | No | `testUser` (unique user via factory), `testOrder` (standard order) – fresh data per test |
-| **logging.fixture** | Yes | Automatically annotates every test with feature name, suite, file, and project. Logs test start/finish with duration and pass/fail status (✅/❌). Zero configuration. |
+| **logging.fixture** | Yes | Automatically annotates every test with feature name, suite, file, and project. Logs test start/finish with duration and pass/fail status. Zero configuration. |
 
 **Usage in tests:**
 ```typescript
@@ -298,22 +306,50 @@ All selectors are centralized in JSON files, imported and re-exported as typed o
 
 ### 4. API Layer (`src/api/`)
 
-#### API Clients (`src/api/clients/`)
+The API layer uses a **centralized interceptor architecture**. API clients contain zero header or response-handling logic — everything flows through `BaseAPI` which delegates to the interceptors.
 
-Each client extends `BaseAPI` and maps to a domain area:
+#### Interceptor Pipeline
 
-| Client | Endpoints | Key Methods |
-|---|---|---|
-| **AuthAPI** | `/auth/login`, `/auth/register` | `login(credentials)` → `{ token, userId }`, `register(data)` → `{ userId, message }` |
-| **UserAPI** | `/auth/register`, `/user/*` | `registerUser(data)`, `getUserDetails(userId, token)` (with auth header) |
-| **OrderAPI** | `/product/*`, `/order/*` | `getAllProducts(token)`, `createOrder(data, token)`, `getOrdersForCustomer(userId, token)`, `deleteOrder(orderId, token)` |
+```
+Request Flow:
+  API Client method -> BaseAPI.post/get/etc -> RequestInterceptor.getHeaders() -> Playwright request
+
+Response Flow:
+  Playwright response -> ResponseInterceptor.logResponse() -> isSuccess() check
+    -> Success (2xx): JSON.parse -> return typed T
+    -> Failure (4xx/5xx): extractErrorMessage() -> logger.error() -> throw Error
+```
+
+#### Token Management
+
+**`AuthAPI.login()` is the single point where the auth token is set.** After a successful login, it automatically calls `RequestInterceptor.setAuthToken(response.token)`. All subsequent API calls through any client (`OrderAPI`, `UserAPI`) automatically include the Authorization header — no token parameters needed.
+
+```typescript
+// In test setup - login once, token is globally available
+const authAPI = new AuthAPI(request);
+await authAPI.login({ userEmail: email, userPassword: password });
+
+// All subsequent calls automatically have auth headers
+const orderAPI = new OrderAPI(request);
+const products = await orderAPI.getAllProducts();  // No token param needed
+```
 
 #### Interceptors (`src/api/interceptors/`)
 
-| Interceptor | Purpose |
-|---|---|
-| **RequestInterceptor** | Manages auth token state. `setAuthToken(token)` stores it; `getHeaders()` returns headers with `Authorization: Bearer <token>` when set. |
-| **ResponseInterceptor** | Response classification: `isSuccess()`, `isClientError()`, `isServerError()`. Extracts error messages from response bodies. Logs all responses. |
+| Interceptor | Purpose | Key Methods |
+|---|---|---|
+| **RequestInterceptor** | Manages a static auth token and builds request headers. `getHeaders()` returns `{ Content-Type: application/json }` and appends `{ Authorization: <token> }` when a token is set. | `setAuthToken(token)`, `clearAuthToken()`, `getHeaders()` |
+| **ResponseInterceptor** | Logs every response (status + URL), classifies status codes, and extracts error messages from response bodies. | `logResponse(response)`, `isSuccess(response)`, `isClientError(response)`, `isServerError(response)`, `extractErrorMessage(response)` |
+
+#### API Clients (`src/api/clients/`)
+
+Each client extends `BaseAPI` and maps to a domain area. **No client handles tokens or headers directly** — `BaseAPI` + interceptors do that automatically.
+
+| Client | Endpoints | Key Methods |
+|---|---|---|
+| **AuthAPI** | `/auth/login`, `/auth/register` | `login(credentials)` -> `LoginResponse` (auto-sets token via `RequestInterceptor`), `register(data)` -> `RegisterResponse` |
+| **UserAPI** | `/auth/register`, `/user/*` | `registerUser(data)` -> `RegisterResponse`, `getUserDetails(userId)` -> `UserResponse` |
+| **OrderAPI** | `/product/*`, `/order/*` | `getAllProducts()` -> `ProductListResponse`, `createOrder(data)` -> `CreateOrderResponse`, `getOrdersForCustomer(userId)` -> `OrderListResponse`, `deleteOrder(orderId)` -> `{ message }` |
 
 #### API Models (`src/api/models/`)
 
@@ -331,8 +367,10 @@ Services implement the **Facade pattern**, abstracting whether an action is perf
 
 | Service | Methods | Purpose |
 |---|---|---|
-| **AuthService** | `loginViaUI(email, password)`, `loginViaAPI(email, password)` | Choose UI login (for E2E flow) or API login (fast setup for other tests) |
-| **UserService** | `registerUserViaAPI(data)`, `viewOrders()` | Combines registration + order viewing workflows |
+| **AuthService** | `loginViaUI(email, password)` -> navigates & fills login form, `loginViaAPI(email, password)` -> calls `AuthAPI.login()` (fast setup) | Choose UI login (for E2E flow) or API login (fast setup for other tests) |
+| **UserService** | `registerUserViaAPI(data)` -> calls `UserAPI.registerUser()`, `viewOrders()` -> navigates to orders page | Combines registration + order viewing workflows |
+
+**AuthService** accepts both a `Page` and an `APIRequestContext` in its constructor, so it can switch between UI and API login strategies.
 
 ---
 
@@ -439,19 +477,19 @@ Pure browser-based tests that validate the user interface:
 
 | Test File | Tests | Description |
 |---|---|---|
-| **login.spec.ts** | 3 | Display login form, valid login → dashboard redirect, invalid login → error toast |
+| **login.spec.ts** | 3 | Display login form, valid login -> dashboard redirect, invalid login -> error toast |
 | **dashboard.spec.ts** | 6 | Serial mode. Products display, product names, add to cart, navigate to cart/orders, sign out |
 | **user-profile.spec.ts** | 3 | Navigate to orders, display orders or no-orders state, back to shop |
 
 #### API Tests (`tests/api/`)
 
-Pure API tests without browser interaction:
+Pure API tests without browser interaction. Tests call `AuthAPI.login()` in `beforeAll` to set the token once, then all subsequent API calls use it automatically:
 
 | Test File | Tests | Description |
 |---|---|---|
 | **auth-api.spec.ts** | 3 | Valid login returns token, invalid login fails, register new user |
 | **user-api.spec.ts** | 2 | Register user, login with new user |
-| **order-api.spec.ts** | 2 | Get all products, get customer orders (with auth token) |
+| **order-api.spec.ts** | 2 | Get all products (auth required), get customer orders (auth required) |
 
 #### Hybrid/E2E Tests (`tests/hybrid/`)
 
@@ -460,7 +498,7 @@ Combined UI + API tests for end-to-end workflows:
 | Test File | Tests | Description |
 |---|---|---|
 | **order-workflow-e2e.spec.ts** | 2 | Serial mode with **shared browser context**. Clears cookies/localStorage between tests, re-navigates on same context. Test 1: full order lifecycle. Test 2: multi-product checkout. |
-| **user-creation-e2e.spec.ts** | 2 | Test 1: Register via API → login via UI → verify dashboard. Test 2: Login → verify product catalog. |
+| **user-creation-e2e.spec.ts** | 2 | Test 1: Register via API -> login via UI -> verify dashboard. Test 2: Login -> verify product catalog. |
 
 ---
 
@@ -480,13 +518,13 @@ Combined UI + API tests for end-to-end workflows:
 ### TypeScript Path Aliases
 
 ```
-@core/*     → src/core/*
-@pages/*    → src/pages/*
-@api/*      → src/api/*
-@services/* → src/services/*
-@data/*     → src/data/*
-@fixtures/* → src/fixtures/*
-@utils/*    → src/utils/*
+@core/*     -> src/core/*
+@pages/*    -> src/pages/*
+@api/*      -> src/api/*
+@services/* -> src/services/*
+@data/*     -> src/data/*
+@fixtures/* -> src/fixtures/*
+@utils/*    -> src/utils/*
 ```
 
 ### Playwright Projects
@@ -539,7 +577,7 @@ npm test
 
 Commands follow the pattern: `test:<type>:<browser>:<env>`
 
-**Browsers:** `chromium`, `firefox`, `webkit`  
+**Browsers:** `chromium`, `firefox`, `webkit`
 **Environments:** *(default: local)*, `staging`, `production`
 
 #### UI Tests
@@ -612,6 +650,7 @@ Detailed test execution log at `reports/test-execution.log` with timestamps for 
 |---|---|---|
 | **Page Object Model** | `src/pages/` | Encapsulates page interactions behind clean methods |
 | **Template Method** | `BasePage`, `BaseAPI` | Common behavior in base class, specifics in subclasses |
+| **Interceptor** | `RequestInterceptor`, `ResponseInterceptor` | Centralized request header injection and response processing in `BaseAPI` |
 | **Composite** | `BaseComponent`, `NavigationBar`, `DataTable`, `Modal` | Reusable UI components scoped to root locators |
 | **Singleton** | `ConfigManager`, `Logger` | Single instance of config and logger across framework |
 | **Strategy** | `src/core/strategies/` | Environment-specific execution behavior (local/staging/CI) |

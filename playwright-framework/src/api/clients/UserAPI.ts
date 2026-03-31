@@ -6,6 +6,7 @@ import { RegisterResponse } from '../models/AuthModels';
 
 /**
  * EN: API client for user management endpoints.
+ *     Uses RequestInterceptor for auth headers on protected routes.
  */
 export class UserAPI extends BaseAPI {
   constructor(request: APIRequestContext) {
@@ -17,17 +18,8 @@ export class UserAPI extends BaseAPI {
     return this.post<RegisterResponse>('/api/ecom/auth/register', data);
   }
 
-  // EN: Get user details by userId (requires auth token in header)
-  async getUserDetails(userId: string, token: string): Promise<UserResponse> {
-    this.logger.info(`GET (auth) /api/ecom/user/${userId}`);
-    const response = await this.request.get(`/api/ecom/user/${userId}`, {
-      headers: { Authorization: token },
-    });
-    const body = await response.text();
-    if (!response.ok()) {
-      this.logger.error(`API Error [${response.status()}]: ${body}`);
-      throw new Error(`API request failed with status ${response.status()}: ${body}`);
-    }
-    return JSON.parse(body) as UserResponse;
+  // EN: Get user details by userId (requires prior login via AuthAPI)
+  async getUserDetails(userId: string): Promise<UserResponse> {
+    return this.get<UserResponse>(`/api/ecom/user/${userId}`);
   }
 }

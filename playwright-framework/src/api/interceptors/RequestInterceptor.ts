@@ -29,7 +29,7 @@ export class RequestInterceptor {
     };
 
     if (RequestInterceptor.token) {
-      headers['Authorization'] = `Bearer ${RequestInterceptor.token}`;
+      headers['Authorization'] = RequestInterceptor.token;
     }
 
     RequestInterceptor.logger.debug('Request headers prepared');

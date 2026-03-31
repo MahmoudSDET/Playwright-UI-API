@@ -2,6 +2,9 @@
 import { APIRequestContext, APIResponse } from '@playwright/test';
 // EN: Import the centralized Logger for API call logging
 import { Logger } from '../logger/Logger';
+// EN: Import interceptors for request headers and response processing
+import { RequestInterceptor } from '../../api/interceptors/RequestInterceptor';
+import { ResponseInterceptor } from '../../api/interceptors/ResponseInterceptor';
 
 /**
  * EN: Abstract base class for all API clients.
@@ -20,55 +23,79 @@ export abstract class BaseAPI {
   // EN: Send a GET request and return parsed response
   protected async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
     this.logger.info(`GET ${endpoint}`);
-    const response = await this.request.get(endpoint, { params });
+    const response = await this.request.get(endpoint, {
+      headers: RequestInterceptor.getHeaders(),
+      params,
+    });
     return this.handleResponse<T>(response);
   }
 
   // EN: Send a POST request with optional data payload
   protected async post<T>(endpoint: string, data?: unknown): Promise<T> {
     this.logger.info(`POST ${endpoint}`);
-    const response = await this.request.post(endpoint, { data });
+    const response = await this.request.post(endpoint, {
+      headers: RequestInterceptor.getHeaders(),
+      data,
+    });
     return this.handleResponse<T>(response);
   }
 
   // EN: Send a PUT request with optional data payload
   protected async put<T>(endpoint: string, data?: unknown): Promise<T> {
     this.logger.info(`PUT ${endpoint}`);
-    const response = await this.request.put(endpoint, { data });
+    const response = await this.request.put(endpoint, {
+      headers: RequestInterceptor.getHeaders(),
+      data,
+    });
     return this.handleResponse<T>(response);
   }
 
   // EN: Send a PATCH request with optional data payload
   protected async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     this.logger.info(`PATCH ${endpoint}`);
-    const response = await this.request.patch(endpoint, { data });
+    const response = await this.request.patch(endpoint, {
+      headers: RequestInterceptor.getHeaders(),
+      data,
+    });
     return this.handleResponse<T>(response);
   }
 
   // EN: Send a DELETE request to the specified endpoint
   protected async delete<T>(endpoint: string): Promise<T> {
     this.logger.info(`DELETE ${endpoint}`);
-    const response = await this.request.delete(endpoint);
+    const response = await this.request.delete(endpoint, {
+      headers: RequestInterceptor.getHeaders(),
+    });
     return this.handleResponse<T>(response);
   }
 
-  // EN: Handle API response - parse JSON on success, throw error on failure
+  // EN: Handle API response using ResponseInterceptor for logging and classification
   private async handleResponse<T>(response: APIResponse): Promise<T> {
-    const status = response.status();
-    const body = await response.text();
+    await ResponseInterceptor.logResponse(response);
 
-    if (!response.ok()) {
-      this.logger.error(`API Error [${status}]: ${body}`);
-      throw new Error(`API request failed with status ${status}: ${body}`);
+    if (!ResponseInterceptor.isSuccess(response)) {
+      const errorMessage = await ResponseInterceptor.extractErrorMessage(response);
+      const status = response.status();
+
+      if (ResponseInterceptor.isClientError(response)) {
+        this.logger.error(`Client Error [${status}]: ${errorMessage}`);
+      } else if (ResponseInterceptor.isServerError(response)) {
+        this.logger.error(`Server Error [${status}]: ${errorMessage}`);
+      }
+
+      throw new Error(`API request failed with status ${status}: ${errorMessage}`);
     }
 
-    this.logger.info(`Response [${status}]`);
+    const body = await response.text();
     return JSON.parse(body) as T;
   }
 
   // EN: Send a GET request and return the raw APIResponse without parsing
   protected async getRaw(endpoint: string, params?: Record<string, string>): Promise<APIResponse> {
     this.logger.info(`GET (raw) ${endpoint}`);
-    return this.request.get(endpoint, { params });
+    return this.request.get(endpoint, {
+      headers: RequestInterceptor.getHeaders(),
+      params,
+    });
   }
 }
