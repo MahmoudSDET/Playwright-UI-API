@@ -1,29 +1,33 @@
-﻿// EN: Import test fixtures and test data factory
-import { test, expect } from '../../src/fixtures/index';
+﻿// EN: Import parallel-safe API test fixtures and test data factory
+import { apiTest as test, expect } from '../../src/fixtures/index';
 import { TestDataFactory } from '../../src/data/factories/TestDataFactory';
 
 /**
  * EN: User API Tests - validates user registration and login flow via API.
+ *     Uses worker-scoped tokens for parallel-safe execution.
  */
 test.describe('User API Tests', () => {
-  // EN: Test user registration | AR: Ø§Ø®ØªØ¨Ø§Ø± ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…
-  test('should register a new user via API', async ({ userAPI }) => {
+  // EN: Enable parallel execution within this describe block
+  test.describe.configure({ mode: 'parallel' });
+
+  // EN: Test user registration
+  test('should register a new user via API', async ({ workerUserAPI }) => {
     const userData = TestDataFactory.createUniqueUser();
     await test.step(`Register user with email: ${userData.userEmail}`, async () => {
-      const response = await userAPI.registerUser(userData);
+      const response = await workerUserAPI.registerUser(userData);
       expect(response.message).toContain('Registered');
     });
   });
 
-  // EN: Test register then login flow | AR: Ø§Ø®ØªØ¨Ø§Ø± ØªØ¯ÙÙ‚ Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ø«Ù… Ø§Ù„Ø¯Ø®ÙˆÙ„
-  test('should login with newly registered user', async ({ userAPI, authAPI }) => {
+  // EN: Test register then login flow
+  test('should login with newly registered user', async ({ workerUserAPI, workerAuthAPI }) => {
     const uniqueId = Date.now().toString();
     const userData = TestDataFactory.createUniqueUser(uniqueId);
     await test.step(`Register user: ${userData.userEmail}`, async () => {
-      await userAPI.registerUser(userData);
+      await workerUserAPI.registerUser(userData);
     });
     await test.step(`Login with registered user: ${userData.userEmail}`, async () => {
-      const loginResponse = await authAPI.login({
+      const loginResponse = await workerAuthAPI.login({
         userEmail: userData.userEmail,
         userPassword: userData.userPassword,
       });

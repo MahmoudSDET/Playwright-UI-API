@@ -29,35 +29,37 @@ Enterprise-grade test automation framework built with **Playwright** and the **P
 ## Architecture Overview
 
 ```
-+-------------------------------------------------------------+
++--------------------------------------------------------------+
 |                       TEST SUITES                            |
-|          (UI / API / Hybrid spec files)                      |
-+-------------------------------------------------------------+
+|  UI / API / Hybrid / E2E API (parallel multi-user)           |
++--------------------------------------------------------------+
 |                      FIXTURE LAYER                           |
-|    base  ->  auth  ->  data  ->  logging (auto)              |
-+-----------------------------+-------------------------------+
+|  test:    base -> auth -> data -> logging (auto)             |
+|  apiTest: apiAuth -> data -> logging (auto) [parallel-safe]  |
++-----------------------------+--------------------------------+
 |       PAGE OBJECTS          |         API CLIENTS            |
-|  LoginPage                  |  AuthAPI (sets token once)     |
-|  DashboardPage              |  UserAPI                       |
-|  CartPage                   |  OrderAPI                      |
+|  LoginPage                  |  AuthAPI (workerIndex?)        |
+|  DashboardPage              |  UserAPI (workerIndex?)        |
+|  CartPage                   |  OrderAPI (workerIndex?)       |
 |  CheckoutPage               |                                |
-|  OrdersPage                 +-------------------------------+
+|  OrdersPage                 +--------------------------------+
 |                             |        INTERCEPTORS            |
 |                             |  RequestInterceptor (headers)  |
 |                             |  ResponseInterceptor (status)  |
-+-----------------------------+-------------------------------+
+|                             |  TokenManager (worker tokens)  |
++-----------------------------+--------------------------------+
 |       SERVICES (Facades)                                     |
 |  AuthService (UI vs API login)                               |
 |  UserService (register + view orders)                        |
-+-------------------------------------------------------------+
++--------------------------------------------------------------+
 |                    CORE FRAMEWORK                             |
-|  BasePage | BaseAPI | BaseComponent | BaseTest               |
+|  BasePage | BaseAPI (+ Allure attachments) | BaseComponent   |
 |  ConfigManager (Singleton) | Logger (Singleton)              |
 |  Execution Strategies (Local | Staging | CI)                 |
-+-------------------------------------------------------------+
++--------------------------------------------------------------+
 |               UTILITIES & TEST DATA                          |
 |  Builders | Factories | Helpers | Decorators | Types         |
-+-------------------------------------------------------------+
++--------------------------------------------------------------+
 ```
 
 ---
@@ -98,9 +100,10 @@ playwright-framework/
 │   ├── fixtures/                     # LAYER 2: Dependency injection
 │   │   ├── base.fixture.ts           # Page objects + API clients
 │   │   ├── auth.fixture.ts           # Pre-authenticated page state
+│   │   ├── api-auth.fixture.ts       # Parallel-safe: workerIndex, workerAuth, worker API clients
 │   │   ├── data.fixture.ts           # Auto-generated test data per test
 │   │   ├── logging.fixture.ts        # Auto-logging & test annotations
-│   │   └── index.ts                  # Merged export: { test, expect }
+│   │   └── index.ts                  # Merged exports: { test, expect } + { apiTest, expect }
 │   │
 │   ├── pages/                        # LAYER 3: Page Object Model
 │   │   ├── LoginPage.ts              # Login form interactions
@@ -125,12 +128,13 @@ playwright-framework/
 │   │
 │   ├── api/                          # LAYER 4: API testing layer
 │   │   ├── clients/
-│   │   │   ├── AuthAPI.ts            # Login (auto-sets token), register
-│   │   │   ├── UserAPI.ts            # User registration, profile lookup
-│   │   │   └── OrderAPI.ts           # Products, order CRUD (no token params)
+│   │   │   ├── AuthAPI.ts            # Login (workerIndex?), loginShared(), register
+│   │   │   ├── UserAPI.ts            # User registration, profile (workerIndex-aware)
+│   │   │   └── OrderAPI.ts           # Products, order CRUD (workerIndex-aware)
 │   │   ├── interceptors/
-│   │   │   ├── RequestInterceptor.ts # Static token + header management
-│   │   │   └── ResponseInterceptor.ts # Status classification, error extraction, logging
+│   │   │   ├── RequestInterceptor.ts # Header mgmt + worker-aware token injection
+│   │   │   ├── ResponseInterceptor.ts # Status classification, error extraction, logging
+│   │   │   └── TokenManager.ts       # Worker-scoped token Map + shared token + resolveToken()
 │   │   └── models/
 │   │       ├── AuthModels.ts         # LoginRequest/Response, RegisterRequest/Response
 │   │       ├── UserModels.ts         # User, CreateUserRequest, UserResponse
@@ -182,7 +186,10 @@ playwright-framework/
 │   ├── api/                          # API-only tests
 │   │   ├── auth-api.spec.ts          # Login/register API validation
 │   │   ├── order-api.spec.ts         # Product listing, order retrieval
-│   │   └── user-api.spec.ts          # User registration, login flow
+│   │   ├── user-api.spec.ts          # User registration, login flow
+│   │   ├── parallel-api.spec.ts      # Worker-scoped parallel token tests
+│   │   ├── shared-token-api.spec.ts  # Shared token parallel tests
+│   │   └── e2e-api.spec.ts           # Multi-user E2E: Register→Login→Order→Verify→Delete
 │   │
 │   └── hybrid/                       # UI + API combined E2E tests
 │       ├── order-workflow-e2e.spec.ts # Full order lifecycle (shared context)
@@ -209,7 +216,7 @@ The foundation layer that every other layer builds upon.
 |---|---|---|
 | **BasePage** | Template Method | Abstract base for all page objects. Provides `navigate()`, `click()`, `fill()`, `getText()`, `isVisible()`, `selectOption()`, `uploadFile()`, `takeScreenshot()`. Every method auto-waits for element visibility before acting. Injects Winston logger. |
 | **BaseComponent** | Composite | Abstract base for reusable UI components (navbar, table, modal). Scoped to a root locator so interactions are isolated to the component DOM subtree. Provides `isVisible()`, `waitForVisible()`, `waitForHidden()`. |
-| **BaseAPI** | Template Method + Interceptors | Abstract base for API clients. Wraps Playwright's `request` context with typed `get<T>()`, `post<T>()`, `put<T>()`, `patch<T>()`, `delete<T>()`, `getRaw()` methods. Every HTTP method calls `RequestInterceptor.getHeaders()` for automatic header injection. `handleResponse()` uses `ResponseInterceptor` for logging, status classification, and error extraction. Throws on non-2xx with parsed error message. |
+| **BaseAPI** | Template Method + Interceptors | Abstract base for API clients. Wraps Playwright's `request` context with typed `get<T>()`, `post<T>()`, `put<T>()`, `patch<T>()`, `delete<T>()`, `getRaw()` methods. Supports optional `workerIndex` for parallel-safe token resolution. Every HTTP method is wrapped in `test.step()` for Allure step nesting, and automatically attaches **Request** (method, URL, masked headers, body) and **Response** (status, URL, body) as JSON attachments to the Allure report via `test.info().attach()`. Uses `RequestInterceptor.getWorkerHeaders(workerIndex)` for unified header injection (worker → shared → legacy token). `handleResponse()` uses `ResponseInterceptor` for logging, status classification, and error extraction. Throws on non-2xx with parsed error message. |
 | **BaseTest** | Fixture Extension | Extends Playwright's `test` with an auto-injected `logger` fixture that logs test start/finish markers. |
 
 #### Configuration (`src/core/config/`)
@@ -257,15 +264,33 @@ Playwright fixtures are layered and merged together. Tests import `{ test, expec
 |---|---|---|
 | **base.fixture** | No | `loginPage`, `dashboardPage`, `ordersPage`, `cartPage`, `checkoutPage`, `authAPI`, `userAPI`, `orderAPI` – lazily instantiated per test |
 | **auth.fixture** | No | `authenticatedPage` – navigates to login, performs login using ConfigManager credentials. Call explicitly when needed. |
+| **api-auth.fixture** | No | `workerIndex`, `workerAuth` (LoginResponse), `workerAuthAPI`, `workerUserAPI`, `workerOrderAPI` – parallel-safe API clients with per-worker token isolation |
 | **data.fixture** | No | `testUser` (unique user via factory), `testOrder` (standard order) – fresh data per test |
 | **logging.fixture** | Yes | Automatically annotates every test with feature name, suite, file, and project. Logs test start/finish with duration and pass/fail status. Zero configuration. |
 
+#### Fixture Composition
+
+| Export | Fixtures Merged | Use Case |
+|--------|----------------|----------|
+| `test` | baseFixture + authFixture + dataFixture + loggingFixture | UI tests, hybrid tests, sequential API tests |
+| `apiTest` | apiAuthFixture + dataFixture + loggingFixture | Parallel API tests with worker-scoped tokens |
+
 **Usage in tests:**
 ```typescript
+// UI / Hybrid / Sequential API tests
 import { test, expect } from '../../src/fixtures/index';
 
 test('my test', async ({ loginPage, dashboardPage, page }) => {
   // All fixtures automatically injected
+});
+
+// Parallel API tests (worker-scoped tokens)
+import { apiTest as test, expect } from '../../src/fixtures/index';
+
+test('parallel test', async ({ workerOrderAPI, workerAuth }) => {
+  // Each worker gets its own auth token — no cross-contamination
+  const response = await workerOrderAPI.getAllProducts();
+  expect(response.data).toBeDefined();
 });
 ```
 
@@ -322,24 +347,37 @@ Response Flow:
 
 #### Token Management
 
-**`AuthAPI.login()` is the single point where the auth token is set.** After a successful login, it automatically calls `RequestInterceptor.setAuthToken(response.token)`. All subsequent API calls through any client (`OrderAPI`, `UserAPI`) automatically include the Authorization header — no token parameters needed.
+**`AuthAPI.login()` is the single point where the auth token is set.** Three token strategies are supported:
+
+| Strategy | Method | Use Case | Token Storage |
+|----------|--------|----------|---------------|
+| **Worker-scoped** | `authAPI.login(creds)` with `workerIndex` | Each worker authenticates independently | `TokenManager.workerTokens` Map |
+| **Shared token** | `authAPI.loginShared(creds)` | Login once, all workers share | `TokenManager.sharedToken` |
+| **Legacy** | `authAPI.login(creds)` without `workerIndex` | Backward compatible, single-threaded | `RequestInterceptor.token` |
+
+Token resolution priority: **worker → shared → legacy → null** (via `TokenManager.resolveToken()`).
 
 ```typescript
-// In test setup - login once, token is globally available
+// Legacy: login once, token is globally available
 const authAPI = new AuthAPI(request);
 await authAPI.login({ userEmail: email, userPassword: password });
-
-// All subsequent calls automatically have auth headers
 const orderAPI = new OrderAPI(request);
 const products = await orderAPI.getAllProducts();  // No token param needed
+
+// Parallel: each worker gets its own token
+const authAPI = new AuthAPI(request, workerIndex);
+await authAPI.login(credentials); // → TokenManager.workerTokens.set(workerIndex, token)
+const orderAPI = new OrderAPI(request, workerIndex);
+const products = await orderAPI.getAllProducts();  // Uses worker's own token
 ```
 
 #### Interceptors (`src/api/interceptors/`)
 
 | Interceptor | Purpose | Key Methods |
 |---|---|---|
-| **RequestInterceptor** | Manages a static auth token and builds request headers. `getHeaders()` returns `{ Content-Type: application/json }` and appends `{ Authorization: <token> }` when a token is set. | `setAuthToken(token)`, `clearAuthToken()`, `getHeaders()` |
+| **RequestInterceptor** | Manages auth tokens and builds request headers. Supports legacy single token, worker-scoped tokens, and shared tokens. `getWorkerHeaders(workerIndex?)` resolves tokens via `TokenManager`. | `setAuthToken()`, `getHeaders()`, `setWorkerAuthToken(idx, token)`, `clearWorkerAuthToken(idx)`, `setSharedAuthToken(token)`, `clearSharedAuthToken()`, `getWorkerHeaders(idx?)` |
 | **ResponseInterceptor** | Logs every response (status + URL), classifies status codes, and extracts error messages from response bodies. | `logResponse(response)`, `isSuccess(response)`, `isClientError(response)`, `isServerError(response)`, `extractErrorMessage(response)` |
+| **TokenManager** | Static class managing per-worker token Map + shared token fallback. `resolveToken(workerIndex?)` returns the highest-priority token. | `setWorkerToken(idx, token)`, `getWorkerToken(idx)`, `clearWorkerToken(idx)`, `setSharedToken(token)`, `resolveToken(idx?)`, `clearAll()` |
 
 #### API Clients (`src/api/clients/`)
 
@@ -490,6 +528,9 @@ Pure API tests without browser interaction. Tests call `AuthAPI.login()` in `bef
 | **auth-api.spec.ts** | 3 | Valid login returns token, invalid login fails, register new user |
 | **user-api.spec.ts** | 2 | Register user, login with new user |
 | **order-api.spec.ts** | 2 | Get all products (auth required), get customer orders (auth required) |
+| **parallel-api.spec.ts** | 4 | Worker-scoped parallel tests using `apiTest` fixture with `workerAuth` |
+| **shared-token-api.spec.ts** | 4 | Shared token tests — login once in `beforeAll`, all workers share |
+| **e2e-api.spec.ts** | N×6 | Multi-user E2E scenario: Register → Login → Browse → Order → Verify → Delete. `N` = `NUM_USERS` env var (default 3). Serial within each user, parallel across users. |
 
 #### Hybrid/E2E Tests (`tests/hybrid/`)
 
@@ -529,8 +570,9 @@ Combined UI + API tests for end-to-end workflows:
 
 ### Playwright Projects
 
-| Project | Device |
+| Project | Device / Mode |
 |---|---|
+| `api` | API-only (no browser), `fullyParallel: true` |
 | `chromium` | Desktop Chrome |
 | `firefox` | Desktop Firefox |
 | `webkit` | Desktop Safari |
@@ -572,6 +614,28 @@ npm test
 | `npm run test:api` | All API tests |
 | `npm run test:hybrid` | All hybrid E2E tests |
 | `npm run test:regression` | Full regression suite |
+
+### Parallel API & E2E API Tests
+
+| Command | Description |
+|---|---|
+| `npm run test:e2e:api` | E2E multi-user API scenario (default workers) |
+| `npm run test:e2e:api:w1` | E2E API scenario with 1 worker (sequential) |
+| `npm run test:e2e:api:w2` | E2E API scenario with 2 workers |
+| `npm run test:e2e:api:w4` | E2E API scenario with 4 workers |
+| `npm run test:api:parallel` | All API tests in parallel (4 workers) |
+
+Control the number of simulated users via the `NUM_USERS` environment variable:
+
+```bash
+# 5 users across 4 workers
+cross-env NUM_USERS=5 npm run test:e2e:api:w4
+
+# 10 users across 2 workers
+cross-env NUM_USERS=10 npm run test:e2e:api:w2
+```
+
+Each user runs 6 serial steps (Register → Login → Browse → Order → Verify → Delete). Users execute in parallel across workers.
 
 ### By Browser + Environment
 
@@ -624,6 +688,20 @@ npm run test:debug
 ### Allure Report (Single-File HTML)
 
 After each test run, a **self-contained** `index.html` is generated at `reports/allure-report/index.html` and opens automatically. No server required — can be shared as a single file.
+
+#### Allure Request/Response Attachments
+
+Every API call is automatically logged in the Allure report with nested step trees:
+
+```
+POST /api/ecom/auth/login
+  ├── [Request]  → { method, endpoint, headers (masked), body }
+  └── [Response] → { status, url, body }
+```
+
+- **Request attachments** include method, endpoint, masked authorization headers (`eyJhbGciOiJIUzI1NiIs...***`), and request body (if any).
+- **Response attachments** include HTTP status, URL, and full response body (JSON or text).
+- Attachments use Playwright's native `test.info().attach()` which the `allure-playwright` reporter captures automatically.
 
 To manually regenerate or open:
 

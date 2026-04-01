@@ -20,7 +20,7 @@ export default defineConfig({
   // EN: Retry failed tests (2 in CI, 0 locally)
   retries: process.env.CI ? 2 : 0,
   // EN: Number of parallel workers
-  workers: process.env.CI ? 2 : 2,
+  workers: process.env.CI ? 2 : 4,
   // EN: Global test timeout (30 seconds)
   timeout: 30_000,
   expect: {
@@ -61,8 +61,8 @@ export default defineConfig({
       name: 'api',
       testDir: './tests/api',
       use: {
-        // EN: No browser needed for API tests
-        ...devices['Desktop Chrome'],
+        // EN: API base URL (no browser needed)
+        baseURL: process.env.API_URL || 'https://rahulshettyacademy.com',
       },
       fullyParallel: true,
     },

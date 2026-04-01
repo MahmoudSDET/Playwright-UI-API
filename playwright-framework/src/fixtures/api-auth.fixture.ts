@@ -1,5 +1,5 @@
-// EN: Import base fixture and interceptor/config dependencies
-import { baseFixture } from './base.fixture';
+// EN: Import Playwright base test and API dependencies
+import { test as base } from '@playwright/test';
 import { ConfigManager } from '../core/config/ConfigManager';
 import { RequestInterceptor } from '../api/interceptors/RequestInterceptor';
 import { AuthAPI } from '../api/clients/AuthAPI';
@@ -28,7 +28,7 @@ export type ApiAuthFixtures = {
  *     Each worker logs in independently and stores its own token via TokenManager.
  *     This enables safe parallel API test execution without token conflicts.
  */
-export const apiAuthFixture = baseFixture.extend<ApiAuthFixtures>({
+export const apiAuthFixture = base.extend<ApiAuthFixtures>({
   // EN: Expose the worker index from testInfo.parallelIndex
   workerIndex: async ({}, use, testInfo) => {
     await use(testInfo.parallelIndex);

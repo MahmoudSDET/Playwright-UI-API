@@ -134,6 +134,9 @@ classDiagram
         +constructor(request, workerIndex?)
         +setWorkerIndex(workerIndex) void
         -getRequestHeaders() Record~string, string~
+        -maskHeaders(headers) Record~string, string~
+        -attachRequest(method, endpoint, headers, data?) Promise~void~
+        -attachResponse(response) Promise~void~
         #get~T~(endpoint, params?) Promise~T~
         #post~T~(endpoint, data?) Promise~T~
         #put~T~(endpoint, data?) Promise~T~
@@ -285,13 +288,14 @@ classDiagram
 
 ## 3. Interceptor Pipeline
 
-The interceptor pattern centralizes request headers and response processing. `BaseAPI` uses both interceptors automatically - API clients never handle headers or response parsing directly. In parallel mode, `TokenManager` resolves worker-scoped tokens.
+The interceptor pattern centralizes request headers and response processing. `BaseAPI` uses both interceptors automatically - API clients never handle headers or response parsing directly. In parallel mode, `TokenManager` resolves worker-scoped tokens. Every HTTP method is wrapped in `test.step()` for Allure step nesting, and request/response details are attached as JSON to the report.
 
 ```mermaid
 flowchart LR
     subgraph Request Pipeline
         A["API Client Method\n(e.g. orderAPI.getAllProducts)"] --> B["BaseAPI.post()"]
-        B --> B0{"workerIndex\nset?"}
+        B --> B_STEP["test.step('POST /endpoint')"]
+        B_STEP --> B0{"workerIndex\nset?"}
         B0 -- Yes --> C2["RequestInterceptor\n.getWorkerHeaders(workerIndex)"]
         B0 -- No --> C["RequestInterceptor\n.getHeaders()"]
         C2 --> C3["TokenManager\n.resolveToken(workerIndex)"]
@@ -303,14 +307,16 @@ flowchart LR
         C --> C1{"Token set?"}
         C1 -- Yes --> D
         C1 -- No --> D2
-        D --> E["Playwright\nrequest.post(endpoint,\n{ headers, data })"]
-        D2 --> E
-        D3 --> E
+        D --> ATT_REQ["attachRequest()\ntest.info().attach('Request',\n{method, url, maskedHeaders, body})"]
+        D2 --> ATT_REQ
+        D3 --> ATT_REQ
+        ATT_REQ --> E["Playwright\nrequest.post(endpoint,\n{ headers, data })"]
     end
 
     subgraph Response Pipeline
         E --> F["APIResponse"]
-        F --> G["ResponseInterceptor\n.logResponse()"]
+        F --> ATT_RES["attachResponse()\ntest.info().attach('Response',\n{status, url, body})"]
+        ATT_RES --> G["ResponseInterceptor\n.logResponse()"]
         G --> H{"isSuccess?\n(2xx)"}
         H -- Yes --> I["response.text()\nJSON.parse(body)\nreturn typed T"]
         H -- No --> J{"isClientError?\n(4xx)"}
@@ -486,18 +492,22 @@ flowchart TB
     subgraph P5["Phase 5: API Test Execution"]
         I1 --> J["test.beforeAll"]
         J --> J1["authAPI.login(credentials)"]
-        J1 --> J2["BaseAPI.post('/auth/login')"]
-        J2 --> J3["RequestInterceptor.getHeaders()\n-> Content-Type only"]
-        J3 --> J4["request.post(endpoint, { headers, data })"]
-        J4 --> J5["ResponseInterceptor.logResponse()"]
-        J5 --> J6["isSuccess? -> JSON.parse -> LoginResponse"]
+        J1 --> J2["test.step('POST /auth/login')"]
+        J2 --> J3["RequestInterceptor.getHeaders()\n→ Content-Type only"]
+        J3 --> J3a["attachRequest('POST', url,\nmaskedHeaders, credentials)"]
+        J3a --> J4["request.post(endpoint, { headers, data })"]
+        J4 --> J4a["attachResponse(response)\n→ {status, url, body}"]
+        J4a --> J5["ResponseInterceptor.logResponse()"]
+        J5 --> J6["isSuccess? → JSON.parse → LoginResponse"]
         J6 --> J7["RequestInterceptor\n.setAuthToken(response.token)"]
 
         J7 --> K["test: orderAPI.getAllProducts()"]
-        K --> K1["BaseAPI.post('/product/get-all-products')"]
-        K1 --> K2["RequestInterceptor.getHeaders()\n-> Content-Type + Authorization"]
-        K2 --> K3["request.post(endpoint, { headers, data })"]
-        K3 --> K4["ResponseInterceptor pipeline\n-> ProductListResponse"]
+        K --> K1["test.step('POST /product/get-all-products')"]
+        K1 --> K2["RequestInterceptor.getHeaders()\n→ Content-Type + Authorization"]
+        K2 --> K2a["attachRequest('POST', url,\nmaskedHeaders, {})"]
+        K2a --> K3["request.post(endpoint, { headers, data })"]
+        K3 --> K3a["attachResponse(response)"]
+        K3a --> K4["ResponseInterceptor pipeline\n→ ProductListResponse"]
         K4 --> K5["expect(response.data)\n.toBeDefined()"]
     end
 
@@ -631,6 +641,93 @@ test.describe('Shared Token Tests', () => {
     RequestInterceptor.clearSharedAuthToken();
   });
 });
+```
+
+### E2E Multi-User API Scenario
+
+The `e2e-api.spec.ts` test dynamically generates `N` users (controlled by `NUM_USERS` env var, default 3) that each run a complete lifecycle **serially** within their own `test.describe`, while **different users run in parallel** across Playwright workers.
+
+```mermaid
+flowchart TB
+    subgraph Control["Control Panel"]
+        A["NUM_USERS = process.env.NUM_USERS || 3"]
+        A --> B["for (let i = 0; i < NUM_USERS; i++)"]
+    end
+
+    subgraph User1["test.describe('E2E User 1/3', { mode: 'serial' })"]
+        C1["Step 1: Register"] --> C2["Step 2: Login"]
+        C2 --> C3["Step 3: Browse Products"]
+        C3 --> C4["Step 4: Create Order"]
+        C4 --> C5["Step 5: Verify Order"]
+        C5 --> C6["Step 6: Delete Order (cleanup)"]
+    end
+
+    subgraph User2["test.describe('E2E User 2/3', { mode: 'serial' })"]
+        D1["Step 1: Register"] --> D2["Step 2: Login"]
+        D2 --> D3["Step 3: Browse Products"]
+        D3 --> D4["Step 4: Create Order"]
+        D4 --> D5["Step 5: Verify Order"]
+        D5 --> D6["Step 6: Delete Order"]
+    end
+
+    subgraph User3["test.describe('E2E User 3/3', { mode: 'serial' })"]
+        E1["Step 1: Register"] --> E2["Step 2: Login"]
+        E2 --> E3["Step 3: Browse Products"]
+        E3 --> E4["Step 4: Create Order"]
+        E4 --> E5["Step 5: Verify Order"]
+        E5 --> E6["Step 6: Delete Order"]
+    end
+
+    B --> User1
+    B --> User2
+    B --> User3
+
+    style User1 fill:#e3f2fd
+    style User2 fill:#f3e5f5
+    style User3 fill:#e8f5e9
+```
+
+**Key Design Decisions:**
+- Uses `@playwright/test` directly (not `apiTest` fixture) since each user registers fresh and manages its own token
+- `shortId = Date.now() % 100000 + i` keeps firstName/lastName under API's 20-char limit
+- `test.describe.configure({ mode: 'serial' })` ensures steps run in order per user
+- Deterministic titles (`E2E User ${i+1}/${NUM_USERS}`) — required by Playwright for worker process matching
+
+### Allure Request/Response Attachments
+
+`BaseAPI` wraps every HTTP method in `test.step()` and automatically attaches request/response JSON to the Allure report via Playwright's native `test.info().attach()`:
+
+```mermaid
+sequenceDiagram
+    participant Test as Test Body
+    participant Base as BaseAPI
+    participant Step as test.step()
+    participant Allure as test.info().attach()
+    participant PW as Playwright Request
+
+    Test->>Base: orderAPI.getAllProducts()
+    Base->>Step: test.step('POST /api/ecom/product/get-all-products')
+
+    Step->>Step: maskHeaders(headers)
+    Note over Step: Authorization: eyJhbGciOi...***
+
+    Step->>Allure: attach('Request', { method, endpoint, maskedHeaders, body })
+    Step->>PW: request.post(endpoint, { headers, data })
+    PW-->>Step: APIResponse
+
+    Step->>Allure: attach('Response', { status, url, body })
+    Step-->>Test: typed response
+```
+
+**Result in Allure Report:**
+```
+test: 'Step 3: Browse and select a product'
+  └── POST /api/ecom/auth/login
+  │     ├── 📎 Request  (application/json)
+  │     └── 📎 Response (application/json)
+  └── POST /api/ecom/product/get-all-products
+        ├── 📎 Request  (application/json)
+        └── 📎 Response (application/json)
 ```
 
 ---
@@ -770,13 +867,14 @@ sequenceDiagram
     PW-->>Test: Login action completed
 ```
 
-### API: `authAPI.login()` Call Chain (with Interceptors)
+### API: `authAPI.login()` Call Chain (with Interceptors + Allure Attachments)
 
 ```mermaid
 sequenceDiagram
     participant Test as Test Body
     participant Auth as AuthAPI
     participant Base as BaseAPI
+    participant Step as test.step()
     participant ReqI as RequestInterceptor
     participant ResI as ResponseInterceptor
     participant Log as Logger
@@ -785,34 +883,42 @@ sequenceDiagram
 
     Test->>Auth: authAPI.login({ userEmail, userPassword })
     Auth->>Base: this.post('/api/ecom/auth/login', credentials)
-    Base->>Log: logger.info('POST /api/ecom/auth/login')
-    Base->>ReqI: getHeaders()
-    ReqI-->>Base: { Content-Type: application/json }
+    Base->>Step: test.step('POST /api/ecom/auth/login')
+    Step->>Log: logger.info('POST /api/ecom/auth/login')
+    Step->>ReqI: getHeaders()
+    ReqI-->>Step: { Content-Type: application/json }
 
-    Base->>PW: request.post(endpoint, { headers, data })
+    Step->>Step: attachRequest(method, url, maskedHeaders, body)
+    Note over Step: test.info().attach('Request', JSON)
+
+    Step->>PW: request.post(endpoint, { headers, data })
     PW->>Server: HTTP POST /api/ecom/auth/login
     Server-->>PW: 200 OK { token, userId, message }
-    PW-->>Base: APIResponse
+    PW-->>Step: APIResponse
 
-    Base->>ResI: logResponse(response)
+    Step->>Step: attachResponse(response)
+    Note over Step: test.info().attach('Response', JSON)
+
+    Step->>ResI: logResponse(response)
     ResI->>Log: logger.info('Response: 200 /api/ecom/auth/login')
-    Base->>ResI: isSuccess(response)
-    ResI-->>Base: true (status 200)
-    Base->>Base: JSON.parse(body) as LoginResponse
+    Step->>ResI: isSuccess(response)
+    ResI-->>Step: true (status 200)
+    Step->>Step: JSON.parse(body) as LoginResponse
 
-    Base-->>Auth: LoginResponse { token, userId }
+    Step-->>Auth: LoginResponse { token, userId }
     Auth->>ReqI: setAuthToken(response.token)
     Note over ReqI: static token = 'eyJhbG...'
     Auth-->>Test: LoginResponse
 ```
 
-### API: `orderAPI.getAllProducts()` (After Login)
+### API: `orderAPI.getAllProducts()` (After Login, with Allure Attachments)
 
 ```mermaid
 sequenceDiagram
     participant Test as Test Body
     participant Order as OrderAPI
     participant Base as BaseAPI
+    participant Step as test.step()
     participant ReqI as RequestInterceptor
     participant ResI as ResponseInterceptor
     participant PW as Playwright Request
@@ -820,20 +926,27 @@ sequenceDiagram
 
     Test->>Order: orderAPI.getAllProducts()
     Order->>Base: this.post('/api/ecom/product/get-all-products', {})
-    Base->>ReqI: getHeaders()
+    Base->>Step: test.step('POST /api/ecom/product/get-all-products')
+    Step->>ReqI: getHeaders()
     Note over ReqI: Token already set by login
-    ReqI-->>Base: { Content-Type, Authorization: token }
+    ReqI-->>Step: { Content-Type, Authorization: token }
 
-    Base->>PW: request.post(endpoint, { headers, data })
+    Step->>Step: attachRequest('POST', url, maskedHeaders, {})
+    Note over Step: test.info().attach('Request', JSON)
+
+    Step->>PW: request.post(endpoint, { headers, data })
     PW->>Server: HTTP POST (with auth header)
     Server-->>PW: 200 OK { data: [...products] }
-    PW-->>Base: APIResponse
+    PW-->>Step: APIResponse
 
-    Base->>ResI: logResponse(response)
-    Base->>ResI: isSuccess(response) -> true
-    Base->>Base: JSON.parse -> ProductListResponse
+    Step->>Step: attachResponse(response)
+    Note over Step: test.info().attach('Response', JSON)
 
-    Base-->>Order: ProductListResponse
+    Step->>ResI: logResponse(response)
+    Step->>ResI: isSuccess(response) -> true
+    Step->>Step: JSON.parse -> ProductListResponse
+
+    Step-->>Order: ProductListResponse
     Order-->>Test: { data: [product1, product2, ...] }
 ```
 
@@ -942,7 +1055,7 @@ sequenceDiagram
 | **Response handling** | DOM assertions | `ResponseInterceptor` pipeline | Same |
 | **Waits for** | DOM elements | HTTP responses | Same |
 | **Returns** | Strings, booleans | Typed JSON objects | Same |
-| **Artifacts on failure** | Screenshots, video, trace | Logs only | Logs only |
+| **Artifacts on failure** | Screenshots, video, trace | Request/Response JSON attachments + logs | Request/Response JSON attachments + logs |
 | **Browser needed?** | Yes | No | No |
 | **Speed** | Slower (rendering) | Faster (HTTP only) | Fastest (parallel HTTP) |
 
@@ -1039,7 +1152,9 @@ Runs for every test automatically:
 ### Phase 5: Test Execution
 
 **UI path**: Test -> Page Object -> BasePage protected methods -> Playwright Page API
-**API path**: Test -> API Client -> BaseAPI protected methods -> Interceptors -> Playwright Request API
+**API path**: Test -> API Client -> BaseAPI protected methods -> `test.step()` wrapping -> `attachRequest()` -> Interceptors -> Playwright Request API -> `attachResponse()` -> ResponseInterceptor
+
+Every API call produces a nested Allure step with Request and Response JSON attachments. Authorization headers are masked (`eyJhbGci...***`) in attachments for security.
 
 ### Phase 6: Teardown
 
@@ -1111,7 +1226,7 @@ playwright-framework/
         OrderModels.ts           # Product, Order, CreateOrderRequest/Response
     core/
       base/
-        BaseAPI.ts               # Abstract: HTTP methods + workerIndex + getRequestHeaders()
+        BaseAPI.ts               # Abstract: HTTP methods + workerIndex + getRequestHeaders() + Allure attachments
         BasePage.ts              # Abstract: page interactions
         BaseComponent.ts         # Abstract: reusable UI components
       logger/
@@ -1133,5 +1248,6 @@ playwright-framework/
     api/                         # API-only tests (auth, user, order)
       parallel-api.spec.ts       # Worker-scoped parallel token tests
       shared-token-api.spec.ts   # Shared token parallel tests
+      e2e-api.spec.ts            # Multi-user E2E: Register→Login→Order→Verify→Delete (NUM_USERS)
     hybrid/                      # E2E combining UI + API
 ```

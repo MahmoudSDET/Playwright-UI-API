@@ -1,41 +1,43 @@
-﻿// EN: Import test fixtures
-import { test, expect } from '../../src/fixtures/index';
+﻿// EN: Import parallel-safe API test fixtures
+import { apiTest as test, expect } from '../../src/fixtures/index';
 
 /**
- * EN: Order API Tests - validates product listing and order retrieval via API.
- *     Uses beforeAll to login once and share token across tests.
- *     ÙŠØ³ØªØ®Ø¯Ù… beforeAll Ù„ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù…Ø±Ø© ÙˆØ§Ø­Ø¯Ø© ÙˆÙ…Ø´Ø§Ø±ÙƒØ© Ø§Ù„Ø±Ù…Ø² Ø¨ÙŠÙ† Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±Ø§Øª.
+ * EN: Order API Tests - validates product listing and order operations via API.
+ *     Uses worker-scoped tokens for parallel-safe execution.
  */
 test.describe('Order API Tests', () => {
-  // EN: Shared auth token and userId | AR: Ø±Ù…Ø² Ø§Ù„Ù…ØµØ§Ø¯Ù‚Ø© ÙˆÙ…Ø¹Ø±Ù Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø§Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ†
-  let userId: string;
-  const userEmail = 'testpom2026@example.com';
+  // EN: Enable parallel execution within this describe block
+  test.describe.configure({ mode: 'parallel' });
 
-  // EN: Login once before all tests and set auth token via AuthAPI
-  test.beforeAll(async ({ request }) => {
-    const { AuthAPI } = await import('../../src/api/clients/AuthAPI');
-    const authAPI = new AuthAPI(request);
-    const response = await authAPI.login({
-      userEmail,
-      userPassword: 'Test@12345',
-    });
-    userId = response.userId;
-  });
-
-  // EN: Test fetching all products | AR: Ø§Ø®ØªØ¨Ø§Ø± Ø¬Ù„Ø¨ ÙƒÙ„ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª
-  test('should get all products', async ({ orderAPI }) => {
+  // EN: Test fetching all products (workerAuth auto-authenticates per worker)
+  test('should get all products', async ({ workerOrderAPI, workerAuth }) => {
     await test.step('Fetch all products via API', async () => {
-      const response = await orderAPI.getAllProducts();
+      const response = await workerOrderAPI.getAllProducts();
       expect(response.data).toBeDefined();
       expect(response.data.length).toBeGreaterThan(0);
     });
   });
 
-  // EN: Test fetching orders for a customer | AR: Ø§Ø®ØªØ¨Ø§Ø± Ø¬Ù„Ø¨ Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ù„Ø¹Ù…ÙŠÙ„
-  test('should get orders for customer', async ({ orderAPI }) => {
-    await test.step(`Fetch orders for customer: ${userId}`, async () => {
-      const response = await orderAPI.getOrdersForCustomer(userId);
+  // EN: Test fetching orders for a customer
+  test('should get orders for customer', async ({ workerOrderAPI, workerAuth }) => {
+    await test.step(`Fetch orders for customer: ${workerAuth.userId}`, async () => {
+      const response = await workerOrderAPI.getOrdersForCustomer(workerAuth.userId);
       expect(response.data).toBeDefined();
+    });
+  });
+
+  // EN: Test creating an order
+  test('should create an order', async ({ workerOrderAPI, workerAuth }) => {
+    await test.step('Create order with first available product', async () => {
+      const products = await workerOrderAPI.getAllProducts();
+      expect(products.data.length).toBeGreaterThan(0);
+      const productId = products.data[0]._id;
+
+      const orderResponse = await workerOrderAPI.createOrder({
+        orders: [{ country: 'Egypt', productOrderedId: productId }],
+      });
+      expect(orderResponse.orders).toBeDefined();
+      expect(orderResponse.productOrderId.length).toBeGreaterThan(0);
     });
   });
 });

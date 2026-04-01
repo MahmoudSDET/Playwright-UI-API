@@ -1,39 +1,38 @@
-﻿// EN: Import test fixtures
-import { test, expect } from '../../src/fixtures/index';
+﻿// EN: Import parallel-safe API test fixtures
+import { apiTest as test, expect } from '../../src/fixtures/index';
 
 /**
  * EN: Auth API Tests - validates login and registration via API endpoints.
+ *     Uses worker-scoped tokens for parallel-safe execution.
  */
 test.describe('Auth API Tests', () => {
-  // EN: Test successful login returns token | AR: Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø§Ù„Ù†Ø§Ø¬Ø­ ÙŠØ±Ø¬Ø¹ Ø±Ù…Ø²
-  test('should login via API with valid credentials', async ({ authAPI }) => {
-    const userEmail = 'testpom2026@example.com';
-    await test.step(`Login with email: ${userEmail}`, async () => {
-      const response = await authAPI.login({
-        userEmail,
-        userPassword: 'Test@12345',
-      });
-      expect(response.token).toBeTruthy();
-      expect(response.userId).toBeTruthy();
+  // EN: Enable parallel execution within this describe block
+  test.describe.configure({ mode: 'parallel' });
+
+  // EN: Test successful login returns token (workerAuth auto-authenticates)
+  test('should login via API with valid credentials', async ({ workerAuth }) => {
+    await test.step(`Verify login response for userId: ${workerAuth.userId}`, async () => {
+      expect(workerAuth.token).toBeTruthy();
+      expect(workerAuth.userId).toBeTruthy();
     });
   });
 
-  // EN: Test failed login throws error | AR: Ø§Ø®ØªØ¨Ø§Ø± Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø§Ù„ÙØ§Ø´Ù„ ÙŠØ±Ù…ÙŠ Ø®Ø·Ø£
-  test('should fail login with invalid credentials', async ({ authAPI }) => {
+  // EN: Test failed login throws error
+  test('should fail login with invalid credentials', async ({ workerAuthAPI }) => {
     const userEmail = 'invalid@example.com';
     await test.step(`Login with email: ${userEmail}`, async () => {
       await expect(
-        authAPI.login({ userEmail, userPassword: 'wrong' }),
+        workerAuthAPI.login({ userEmail, userPassword: 'wrong' }),
       ).rejects.toThrow();
     });
   });
 
-  // EN: Test user registration via API | AR: Ø§Ø®ØªØ¨Ø§Ø± ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¹Ø¨Ø± API
-  test('should register a new user via API', async ({ authAPI }) => {
+  // EN: Test user registration via API
+  test('should register a new user via API', async ({ workerAuthAPI }) => {
     const uniqueId = Date.now().toString();
     const userEmail = `testapi_${uniqueId}@example.com`;
     await test.step(`Register with email: ${userEmail}`, async () => {
-      const response = await authAPI.register({
+      const response = await workerAuthAPI.register({
         firstName: 'Test',
         lastName: 'User',
         userEmail,

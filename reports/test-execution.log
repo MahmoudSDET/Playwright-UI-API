@@ -456,3 +456,48 @@
 [2026-04-01 22:11:00] INFO:    [file]: parallel-api.spec.ts
 [2026-04-01 22:11:00] INFO:    [project]: api
 [2026-04-01 22:11:00] INFO: âœ… Test "worker should create and verify order" passed (639ms)
+[2026-04-01 23:14:54] INFO: POST /api/ecom/auth/login
+[2026-04-01 23:14:55] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 23:14:55] INFO: Response Body: {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWM4Y2M5ZmY4NmJhNTFhNjUzMmU2ODgiLCJ1c2VyRW1haWwiOiJ0ZXN0cG9tMjAyNkBleGFtcGxlLmNvbSIsInVzZXJNb2JpbGUiOjk4NzY1NDMyMTAsInVzZXJSb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NzUwNzgwOTQsImV4cCI6MTgwNjYzNTY5NH0._JdTVRmxFwnu9b6Y2hI4TKkeV7vgrcX46-qjL0Hc2zs","userId":"69c8cc9ff86ba51a6532e688","message":"Login Successfully"}
+[2026-04-01 23:14:55] INFO: Shared token set
+[2026-04-01 23:14:55] INFO: POST /api/ecom/product/get-all-products
+[2026-04-01 23:14:55] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/product/get-all-products
+[2026-04-01 23:14:55] INFO: Response Body: {"data":[{"_id":"6960eae1c941646b7a8b3ed3","productName":"ADIDAS ORIGINAL","productCategory":"electronics","productSubCategory":"mobiles","productPrice":11500,"productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","productRating":"0","productTotalOrders":"0","productStatus":true,"productFor":"women","productAddedBy":"admin","__v":0},{"_id":"6960eac0c941646b7a8b3e68","productName":"ZARA COAT 3","productCategory":"electronics","productSubCategory":"mobiles","productPrice":11500,"productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959232316.jpeg","productRating":"0","productTotalOrders":"0","productStatus":true,"productFor":"women","productAddedBy":"admin","__v":0},{"_id":"6960ea76c941646b7a8b3dd5","productName":"iphone 13 pro","productCategory":"electronics","productSubCategory":"mobiles","productPrice":55000,"productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959158182.jpg","productRating":"0","productTotalOrders":"0","productStatus":true,"productFor":"women","productAddedBy":"admin","__v":0}],"count":3,"message":"All Products fetched Successfully"}
+[2026-04-01 23:14:55] INFO: GET /api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 23:14:55] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 23:14:55] INFO: Response Body: {"data":[{"_id":"69cd8a6cf86ba51a653eda1b","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Wed Apr 01","productName":"ADIDAS ORIGINAL","country":"India","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","orderDate":null,"orderPrice":"11500","__v":0},{"_id":"69cd8a6cf86ba51a653eda0a","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Wed Apr 01","productName":"ADIDAS ORIGINAL","country":"Egypt","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","orderDate":null,"orderPrice":"11500","__v":0},{"_id":"69cd846bf86ba51a653ed0f5","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Wed Apr 01","productName":"ADIDAS ORIGINAL","country":"India","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","orderDate":null,"orderPrice":"11500","__v":0},{"_id":"69cd846af86ba51a653ed0e6","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Wed Apr 01","productName":"ADIDAS ORIGINAL","country":"Egypt","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","orderDate":null,"orderPrice":"11500","__v":0},{"_id":"69cd7bd4f86ba51a653ec50d","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Wed Apr 01","productName":"ADIDAS ORIGINAL","country":"India","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","orderDate":null,"orderPrice":"11500","__v":0},{"_id":"69cd7678f86ba51a653ebd16","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Wed Apr 01","productName":"ADIDAS ORIGINAL","country":"India","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","orderDate":null,"orderPrice":"11500","__v":0},{"_id":"69cd760df86ba51a653ebc3d","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Wed Apr 01","productName":"ADIDAS ORIGINAL","country":"India","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959265156.jpg","orderDate":null,"orderPrice":"11500","__v":0},{"_id":"69cb0c59f86ba51a65385822","orderById":"69c8cc9ff86ba51a6532e688","orderBy":"testpom2026@example.com","productOrderedId":"Mon Mar 30","productName":"ZARA COAT 3","country":"British Indian Ocean Territory","productDescription":"Apple phone","productImage":"https://rahulshettyacademy.com/api/ecom/uploads/productImage_1767959232316.jpeg","orderDate":null,"orderPrice":"11500","__v":0}],"count":8,"message":"Orders fetched for customer Successfully"}
+[2026-04-01 23:14:55] INFO: Shared token cleared
+[2026-04-01 23:15:14] INFO: â–¶ Starting test: "should register a new user via API" [user-api.spec.ts] | Feature: User API Tests | Suite: api | Project: api
+[2026-04-01 23:15:14] INFO: POST /api/ecom/auth/login
+[2026-04-01 23:15:15] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 23:15:15] INFO: Response Body: {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWM4Y2M5ZmY4NmJhNTFhNjUzMmU2ODgiLCJ1c2VyRW1haWwiOiJ0ZXN0cG9tMjAyNkBleGFtcGxlLmNvbSIsInVzZXJNb2JpbGUiOjk4NzY1NDMyMTAsInVzZXJSb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NzUwNzgxMTUsImV4cCI6MTgwNjYzNTcxNX0.fY1i7XtTY4TJtfPVyJcj440tpsSP6p_J1zg5NrL2XEs","userId":"69c8cc9ff86ba51a6532e688","message":"Login Successfully"}
+[2026-04-01 23:15:15] INFO: Token set for worker 0
+[2026-04-01 23:15:15] INFO: POST /api/ecom/auth/register
+[2026-04-01 23:15:15] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/register
+[2026-04-01 23:15:15] INFO: Response Body: {"message":"Registered Successfully"}
+[2026-04-01 23:15:15] INFO: Token cleared for worker 0
+[2026-04-01 23:15:15] INFO: ðŸ“‹ Test annotations for "should register a new user via API":
+[2026-04-01 23:15:15] INFO:    [feature]: User API Tests
+[2026-04-01 23:15:15] INFO:    [suite]: api
+[2026-04-01 23:15:15] INFO:    [file]: user-api.spec.ts
+[2026-04-01 23:15:15] INFO:    [project]: api
+[2026-04-01 23:15:15] INFO: âœ… Test "should register a new user via API" passed (839ms)
+[2026-04-01 23:15:15] INFO: â–¶ Starting test: "should login with newly registered user" [user-api.spec.ts] | Feature: User API Tests | Suite: api | Project: api
+[2026-04-01 23:15:15] INFO: POST /api/ecom/auth/login
+[2026-04-01 23:15:16] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 23:15:16] INFO: Response Body: {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWM4Y2M5ZmY4NmJhNTFhNjUzMmU2ODgiLCJ1c2VyRW1haWwiOiJ0ZXN0cG9tMjAyNkBleGFtcGxlLmNvbSIsInVzZXJNb2JpbGUiOjk4NzY1NDMyMTAsInVzZXJSb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NzUwNzgxMTUsImV4cCI6MTgwNjYzNTcxNX0.fY1i7XtTY4TJtfPVyJcj440tpsSP6p_J1zg5NrL2XEs","userId":"69c8cc9ff86ba51a6532e688","message":"Login Successfully"}
+[2026-04-01 23:15:16] INFO: Token set for worker 0
+[2026-04-01 23:15:16] INFO: POST /api/ecom/auth/register
+[2026-04-01 23:15:16] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/register
+[2026-04-01 23:15:16] INFO: Response Body: {"message":"Registered Successfully"}
+[2026-04-01 23:15:16] INFO: POST /api/ecom/auth/login
+[2026-04-01 23:15:16] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 23:15:16] INFO: Response Body: {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWNkOGFlNGY4NmJhNTFhNjUzZWRhYzQiLCJ1c2VyRW1haWwiOiJ0ZXN0dXNlcl8xNzc1MDc4MTE2MDE4QGV4YW1wbGUuY29tIiwidXNlck1vYmlsZSI6MTIzNDU2Nzg5MCwiaWF0IjoxNzc1MDc4MTE2LCJleHAiOjE4MDY2MzU3MTZ9.177ovxXAcxRvq-c16nAN5t0sj60ozvOMlidVR1qEzCk","userId":"69cd8ae4f86ba51a653edac4","message":"Login Successfully"}
+[2026-04-01 23:15:16] INFO: Token set for worker 0
+[2026-04-01 23:15:16] INFO: Token cleared for worker 0
+[2026-04-01 23:15:16] INFO: ðŸ“‹ Test annotations for "should login with newly registered user":
+[2026-04-01 23:15:16] INFO:    [feature]: User API Tests
+[2026-04-01 23:15:16] INFO:    [suite]: api
+[2026-04-01 23:15:16] INFO:    [file]: user-api.spec.ts
+[2026-04-01 23:15:16] INFO:    [project]: api
+[2026-04-01 23:15:16] INFO: âœ… Test "should login with newly registered user" passed (689ms)

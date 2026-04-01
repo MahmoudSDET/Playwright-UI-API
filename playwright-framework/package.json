@@ -41,6 +41,11 @@
     "test:hybrid:webkit:production": "npm run clean:reports && (cross-env ENV=production npx playwright test tests/hybrid --project=webkit --headed || echo Tests failed but continuing...) && npm run posttest",
     "test:staging": "npm run clean:reports && (cross-env ENV=staging npx playwright test || echo Tests failed but continuing...) && npm run posttest",
     "test:production": "npm run clean:reports && (cross-env ENV=production npx playwright test || echo Tests failed but continuing...) && npm run posttest",
+    "test:e2e:api": "npm run clean:reports && (npx playwright test tests/api/e2e-api.spec.ts --project=api || echo Tests failed but continuing...) && npm run posttest",
+    "test:e2e:api:w1": "npm run clean:reports && (npx playwright test tests/api/e2e-api.spec.ts --project=api --workers=1 || echo Tests failed but continuing...) && npm run posttest",
+    "test:e2e:api:w2": "npm run clean:reports && (npx playwright test tests/api/e2e-api.spec.ts --project=api --workers=2 || echo Tests failed but continuing...) && npm run posttest",
+    "test:e2e:api:w4": "npm run clean:reports && (npx playwright test tests/api/e2e-api.spec.ts --project=api --workers=4 || echo Tests failed but continuing...) && npm run posttest",
+    "test:api:parallel": "npm run clean:reports && (npx playwright test tests/api --project=api --workers=4 || echo Tests failed but continuing...) && npm run posttest",
     "test:debug": "npx playwright test --debug",
     "report": "npx playwright show-report reports/html"
   },
