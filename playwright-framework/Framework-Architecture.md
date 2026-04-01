@@ -9,42 +9,47 @@
 3. [Interceptor Pipeline](#3-interceptor-pipeline)
 4. [UI Test Execution Flow](#4-ui-test-execution-flow)
 5. [API Test Execution Flow](#5-api-test-execution-flow)
-6. [Fixture Dependency Graph](#6-fixture-dependency-graph)
-7. [Sequence Diagrams](#7-sequence-diagrams)
-8. [UI vs API Comparison](#8-ui-vs-api-comparison)
-9. [Detailed Phase Breakdown](#9-detailed-phase-breakdown)
+6. [Parallel API Execution](#6-parallel-api-execution)
+7. [Fixture Dependency Graph](#7-fixture-dependency-graph)
+8. [Sequence Diagrams](#8-sequence-diagrams)
+9. [UI vs API Comparison](#9-ui-vs-api-comparison)
+10. [Detailed Phase Breakdown](#10-detailed-phase-breakdown)
 
 ---
 
 ## 1. High-Level Architecture
 
 ```
-+---------------------------------------------------+
-|                   TEST LAYER                       |
-|  login.spec.ts | auth-api.spec.ts | e2e.spec.ts   |
-+---------------------------------------------------+
-|                 FIXTURE LAYER                      |
-|  base  ->  auth  ->  data  ->  logging (auto)     |
-+------------------------+--------------------------+
-|     PAGE OBJECTS       |      API CLIENTS          |
-|  LoginPage             |  AuthAPI                  |
-|  DashboardPage         |  UserAPI                  |
-|  CartPage              |  OrderAPI                 |
-|  CheckoutPage          |                           |
-|  OrdersPage            |                           |
-+------------------------+--------------------------+
-|     BasePage           |      BaseAPI              |
-|  (abstract)            |  (abstract)               |
-|                        |  + RequestInterceptor     |
-|                        |  + ResponseInterceptor    |
-+------------------------+--------------------------+
-|              SHARED SERVICES                       |
-|  Logger (Singleton)  |  ConfigManager (Singleton)  |
-|  WaitHelper          |  TestAnnotation             |
-+---------------------------------------------------+
-|              PLAYWRIGHT ENGINE                     |
-|  Page | APIRequestContext | Browser | BrowserContext|
-+---------------------------------------------------+
++--------------------------------------------------------------+
+|                      TEST LAYER                              |
+|  login.spec.ts | auth-api.spec.ts | parallel-api.spec.ts     |
+|  shared-token-api.spec.ts | e2e.spec.ts                     |
++--------------------------------------------------------------+
+|                    FIXTURE LAYER                             |
+|  test:    base -> auth -> data -> logging (auto)             |
+|  apiTest: apiAuth -> data -> logging (auto)  [parallel-safe] |
++-----------------------------+--------------------------------+
+|     PAGE OBJECTS            |      API CLIENTS               |
+|  LoginPage                  |  AuthAPI (workerIndex?)        |
+|  DashboardPage              |  UserAPI (workerIndex?)        |
+|  CartPage                   |  OrderAPI (workerIndex?)       |
+|  CheckoutPage               |                                |
+|  OrdersPage                 |                                |
++-----------------------------+--------------------------------+
+|     BasePage                |      BaseAPI                   |
+|  (abstract)                 |  (abstract, workerIndex?)      |
+|                             |  + RequestInterceptor          |
+|                             |  + ResponseInterceptor         |
+|                             |  + TokenManager                |
++-----------------------------+--------------------------------+
+|                SHARED SERVICES                               |
+|  Logger (Singleton)  |  ConfigManager (Singleton)            |
+|  WaitHelper          |  TestAnnotation                      |
+|  TokenManager        |  (worker + shared token management)   |
++--------------------------------------------------------------+
+|                PLAYWRIGHT ENGINE                             |
+|  Page | APIRequestContext | Browser | BrowserContext         |
++--------------------------------------------------------------+
 ```
 
 Each layer depends only on the layer below it. Tests never call Playwright APIs directly - they go through Page Objects or API Clients.
@@ -125,6 +130,10 @@ classDiagram
         <<abstract>>
         #request: APIRequestContext
         #logger: Logger
+        #workerIndex?: number
+        +constructor(request, workerIndex?)
+        +setWorkerIndex(workerIndex) void
+        -getRequestHeaders() Record~string, string~
         #get~T~(endpoint, params?) Promise~T~
         #post~T~(endpoint, data?) Promise~T~
         #put~T~(endpoint, data?) Promise~T~
@@ -135,16 +144,20 @@ classDiagram
     }
 
     class AuthAPI {
+        +constructor(request, workerIndex?)
         +login(credentials) Promise~LoginResponse~
+        +loginShared(credentials) Promise~LoginResponse~
         +register(data) Promise~RegisterResponse~
     }
 
     class UserAPI {
+        +constructor(request, workerIndex?)
         +registerUser(data) Promise~RegisterResponse~
         +getUserDetails(userId) Promise~UserResponse~
     }
 
     class OrderAPI {
+        +constructor(request, workerIndex?)
         +getAllProducts() Promise~ProductListResponse~
         +createOrder(data) Promise~CreateOrderResponse~
         +getOrdersForCustomer(userId) Promise~OrderListResponse~
@@ -158,6 +171,26 @@ classDiagram
         +static setAuthToken(token) void
         +static clearAuthToken() void
         +static getHeaders() Record~string, string~
+        +static setWorkerAuthToken(workerIndex, token) void
+        +static clearWorkerAuthToken(workerIndex) void
+        +static setSharedAuthToken(token) void
+        +static clearSharedAuthToken() void
+        +static getWorkerHeaders(workerIndex?) Record~string, string~
+    }
+
+    class TokenManager {
+        <<static>>
+        -static workerTokens: Map~number, string~
+        -static sharedToken: string | null
+        -static logger: Logger
+        +static setWorkerToken(workerIndex, token) void
+        +static getWorkerToken(workerIndex) string | null
+        +static clearWorkerToken(workerIndex) void
+        +static setSharedToken(token) void
+        +static getSharedToken() string | null
+        +static clearSharedToken() void
+        +static resolveToken(workerIndex?) string | null
+        +static clearAll() void
     }
 
     class ResponseInterceptor {
@@ -218,9 +251,10 @@ classDiagram
     BaseAPI <|-- OrderAPI
     BaseComponent <|-- DataTable
 
-    BaseAPI ..> RequestInterceptor : getHeaders()
+    BaseAPI ..> RequestInterceptor : getHeaders() / getWorkerHeaders()
     BaseAPI ..> ResponseInterceptor : handleResponse()
-    AuthAPI ..> RequestInterceptor : setAuthToken()
+    AuthAPI ..> RequestInterceptor : setAuthToken() / setWorkerAuthToken() / setSharedAuthToken()
+    RequestInterceptor ..> TokenManager : resolveToken() / setWorkerToken() / setSharedToken()
     BasePage ..> Logger : uses
     BaseAPI ..> Logger : uses
 ```
@@ -230,7 +264,7 @@ classDiagram
 | Base Class | Pattern | Subclasses | Purpose |
 |------------|---------|------------|---------|
 | `BasePage` (abstract) | Page Object Model | `LoginPage`, `DashboardPage`, `CartPage`, `CheckoutPage`, `OrdersPage` | Browser UI interactions |
-| `BaseAPI` (abstract) | API Client + Interceptors | `AuthAPI`, `UserAPI`, `OrderAPI` | REST API calls with auto headers |
+| `BaseAPI` (abstract) | API Client + Interceptors | `AuthAPI`, `UserAPI`, `OrderAPI` | REST API calls with auto headers + worker-aware tokens |
 | `BaseComponent` (abstract) | Component | `DataTable` | Reusable UI components |
 
 ### Singletons
@@ -240,22 +274,38 @@ classDiagram
 | `Logger` | Winston logging to console + file | `Logger.getInstance()` |
 | `ConfigManager` | Environment-specific configuration | `ConfigManager.getInstance()` |
 
+### Static Managers
+
+| Class | Purpose | Access |
+|-------|---------|--------|
+| `TokenManager` | Per-worker + shared token storage for parallel execution | `TokenManager.resolveToken(workerIndex)` |
+| `RequestInterceptor` | Header management with worker-aware token injection | `RequestInterceptor.getWorkerHeaders(workerIndex)` |
+
 ---
 
 ## 3. Interceptor Pipeline
 
-The interceptor pattern centralizes request headers and response processing. `BaseAPI` uses both interceptors automatically - API clients never handle headers or response parsing directly.
+The interceptor pattern centralizes request headers and response processing. `BaseAPI` uses both interceptors automatically - API clients never handle headers or response parsing directly. In parallel mode, `TokenManager` resolves worker-scoped tokens.
 
 ```mermaid
 flowchart LR
     subgraph Request Pipeline
         A["API Client Method\n(e.g. orderAPI.getAllProducts)"] --> B["BaseAPI.post()"]
-        B --> C["RequestInterceptor\n.getHeaders()"]
+        B --> B0{"workerIndex\nset?"}
+        B0 -- Yes --> C2["RequestInterceptor\n.getWorkerHeaders(workerIndex)"]
+        B0 -- No --> C["RequestInterceptor\n.getHeaders()"]
+        C2 --> C3["TokenManager\n.resolveToken(workerIndex)"]
+        C3 --> C4{"worker token\nexists?"}
+        C4 -- Yes --> D["Headers:\nContent-Type: application/json\nAuthorization: worker-token"]
+        C4 -- No --> C5{"shared token\nexists?"}
+        C5 -- Yes --> D3["Headers:\nContent-Type: application/json\nAuthorization: shared-token"]
+        C5 -- No --> D2["Headers:\nContent-Type: application/json"]
         C --> C1{"Token set?"}
-        C1 -- Yes --> D["Headers:\nContent-Type: application/json\nAuthorization: token"]
-        C1 -- No --> D2["Headers:\nContent-Type: application/json"]
+        C1 -- Yes --> D
+        C1 -- No --> D2
         D --> E["Playwright\nrequest.post(endpoint,\n{ headers, data })"]
         D2 --> E
+        D3 --> E
     end
 
     subgraph Response Pipeline
@@ -270,7 +320,17 @@ flowchart LR
     end
 ```
 
-### Token Lifecycle
+### Token Resolution Priority
+
+```
+TokenManager.resolveToken(workerIndex?)
+  1. Worker-scoped token (workerTokens.get(workerIndex))  ← highest priority
+  2. Shared token (sharedToken)                           ← fallback
+  3. Legacy static token (RequestInterceptor.token)       ← backward compatible
+  4. null (no Authorization header)                       ← no auth
+```
+
+### Token Lifecycle (Legacy - Single Token)
 
 ```mermaid
 sequenceDiagram
@@ -297,7 +357,41 @@ sequenceDiagram
     Order-->>Test: ProductListResponse
 ```
 
-**Key**: `AuthAPI.login()` is the single point where `setAuthToken()` is called. All subsequent API calls automatically include the Authorization header.
+### Token Lifecycle (Parallel - Worker-Scoped Tokens)
+
+```mermaid
+sequenceDiagram
+    participant W1 as Worker 0 Test
+    participant W2 as Worker 1 Test
+    participant Auth as AuthAPI
+    participant RI as RequestInterceptor
+    participant TM as TokenManager
+    participant Order as OrderAPI
+
+    par Worker 0 authenticates
+        W1->>Auth: new AuthAPI(request, 0).login(credentials)
+        Auth->>RI: setWorkerAuthToken(0, tokenA)
+        RI->>TM: setWorkerToken(0, tokenA)
+        Note over TM: workerTokens: {0: tokenA}
+    and Worker 1 authenticates
+        W2->>Auth: new AuthAPI(request, 1).login(credentials)
+        Auth->>RI: setWorkerAuthToken(1, tokenB)
+        RI->>TM: setWorkerToken(1, tokenB)
+        Note over TM: workerTokens: {0: tokenA, 1: tokenB}
+    end
+
+    W1->>Order: workerOrderAPI.getAllProducts()
+    Order->>RI: getWorkerHeaders(0)
+    RI->>TM: resolveToken(0) → tokenA
+    RI-->>Order: { Authorization: tokenA }
+
+    W2->>Order: workerOrderAPI.getAllProducts()
+    Order->>RI: getWorkerHeaders(1)
+    RI->>TM: resolveToken(1) → tokenB
+    RI-->>Order: { Authorization: tokenB }
+```
+
+**Key**: Each worker gets its own token stored by `workerIndex`. No cross-contamination between parallel workers.
 
 ---
 
@@ -369,7 +463,7 @@ Traces the full method call chain for an API test with the interceptor pipeline.
 flowchart TB
     subgraph P1["Phase 1: Playwright Startup"]
         A["npx playwright test"] --> B["playwright.config.ts"]
-        B --> B1["dotenv + defineConfig\nbaseURL: rahulshettyacademy.com"]
+        B --> B1["dotenv + defineConfig\nbaseURL: rahulshettyacademy.com\nworkers: 2"]
     end
 
     subgraph P2["Phase 2: Fixture Chain"]
@@ -418,7 +512,130 @@ flowchart TB
 
 ---
 
-## 6. Fixture Dependency Graph
+## 6. Parallel API Execution
+
+### Architecture Overview
+
+Parallel API tests generate **one token per worker** so that parallel workers never overwrite each other's auth state. Two strategies are supported:
+
+| Strategy | Method | Use Case | Token Storage |
+|----------|--------|----------|---------------|
+| **Worker-scoped** | `authAPI.login()` with `workerIndex` | Each test authenticates independently | `TokenManager.workerTokens` Map |
+| **Shared token** | `authAPI.loginShared()` in `beforeAll` | Login once, all workers share | `TokenManager.sharedToken` |
+| **Legacy** | `authAPI.login()` without `workerIndex` | Backward compatible, single-threaded | `RequestInterceptor.token` |
+
+### Parallel Execution Flow
+
+```mermaid
+flowchart TB
+    subgraph P1["Phase 1: Config"]
+        A["playwright.config.ts"] --> A1["api project:\nfullyParallel: true\nworkers: 2"]
+    end
+
+    subgraph P2["Phase 2: apiTest Fixture"]
+        B["import apiTest from fixtures"] --> C["mergeTests()"]
+        C --> C1["apiAuthFixture\ndataFixture\nloggingFixture"]
+    end
+
+    subgraph P3["Phase 3: Worker-Scoped Auth"]
+        C1 --> D["workerAuth fixture"]
+        D --> D1["testInfo.parallelIndex\n→ workerIndex"]
+        D1 --> D2["new AuthAPI(request, workerIndex)"]
+        D2 --> D3["authAPI.login(credentials)"]
+        D3 --> D4["RequestInterceptor\n.setWorkerAuthToken(workerIndex, token)"]
+        D4 --> D5["TokenManager.workerTokens\n.set(workerIndex, token)"]
+    end
+
+    subgraph P4["Phase 4: Worker-Scoped Clients"]
+        D5 --> E["workerOrderAPI:\nnew OrderAPI(request, workerIndex)"]
+        D5 --> F["workerUserAPI:\nnew UserAPI(request, workerIndex)"]
+        D5 --> G["workerAuthAPI:\nnew AuthAPI(request, workerIndex)"]
+    end
+
+    subgraph P5["Phase 5: Parallel Test Execution"]
+        E --> H["BaseAPI.getRequestHeaders()"]
+        H --> H1["workerIndex set?\n→ getWorkerHeaders(workerIndex)"]
+        H1 --> H2["TokenManager.resolveToken(workerIndex)\n→ worker's own token"]
+        H2 --> H3["Each worker uses\nits own auth header"]
+    end
+
+    subgraph P6["Phase 6: Cleanup"]
+        H3 --> I["clearWorkerAuthToken(workerIndex)"]
+    end
+
+    P1 --> P2 --> P3 --> P4 --> P5 --> P6
+```
+
+### Worker Token Isolation Diagram
+
+```
+┌─────────────────────────────────────────────────┐
+│                 TokenManager                     │
+│                                                  │
+│  workerTokens (Map):                             │
+│  ┌──────────┬──────────────────────────┐        │
+│  │ Worker 0 │ token: eyJhbGciOi...AAA  │        │
+│  ├──────────┼──────────────────────────┤        │
+│  │ Worker 1 │ token: eyJhbGciOi...BBB  │        │
+│  ├──────────┼──────────────────────────┤        │
+│  │ Worker 2 │ token: eyJhbGciOi...CCC  │        │
+│  └──────────┴──────────────────────────┘        │
+│                                                  │
+│  sharedToken: eyJhbGciOi...SHARED (fallback)    │
+│                                                  │
+│  resolveToken(workerIndex):                      │
+│    1. workerTokens.get(workerIndex) → found? ✓  │
+│    2. sharedToken → found? ✓                     │
+│    3. null → no auth header                      │
+└─────────────────────────────────────────────────┘
+```
+
+### Usage Patterns
+
+**Pattern 1: Worker-Scoped Tokens (per-test authentication)**
+```typescript
+import { apiTest as test, expect } from '../../src/fixtures/index';
+
+test.describe('Parallel Tests', () => {
+  test.describe.configure({ mode: 'parallel' });
+
+  test('test A', async ({ workerOrderAPI, workerAuth }) => {
+    // workerAuth auto-authenticates this worker
+    const response = await workerOrderAPI.getAllProducts();
+    expect(response.data).toBeDefined();
+  });
+
+  test('test B', async ({ workerOrderAPI, workerAuth }) => {
+    // Different worker, different token - no conflict
+    const response = await workerOrderAPI.getOrdersForCustomer(workerAuth.userId);
+    expect(response.data).toBeDefined();
+  });
+});
+```
+
+**Pattern 2: Shared Token (login once in beforeAll)**
+```typescript
+import { apiTest as test, expect } from '../../src/fixtures/index';
+import { AuthAPI } from '../../src/api/clients/AuthAPI';
+
+test.describe('Shared Token Tests', () => {
+  test.describe.configure({ mode: 'parallel' });
+
+  test.beforeAll(async ({ request }) => {
+    const authAPI = new AuthAPI(request);
+    await authAPI.loginShared({ userEmail, userPassword });
+    // All workers fall back to this shared token
+  });
+
+  test.afterAll(async () => {
+    RequestInterceptor.clearSharedAuthToken();
+  });
+});
+```
+
+---
+
+## 7. Fixture Dependency Graph
 
 ```mermaid
 flowchart LR
@@ -444,6 +661,14 @@ flowchart LR
         authenticatedPage["authenticatedPage\n(auto: false)"]
     end
 
+    subgraph ApiAuth["apiAuthFixture (Parallel)"]
+        workerIndex["workerIndex\ntestInfo.parallelIndex"]
+        workerAuth["workerAuth\nLoginResponse"]
+        workerAuthAPI["workerAuthAPI\nAuthAPI(request, idx)"]
+        workerUserAPI["workerUserAPI\nUserAPI(request, idx)"]
+        workerOrderAPI["workerOrderAPI\nOrderAPI(request, idx)"]
+    end
+
     subgraph Data["dataFixture"]
         testUser["testUser\nCreateUserRequest"]
         testOrder["testOrder\nCreateOrderRequest"]
@@ -458,6 +683,7 @@ flowchart LR
         config["ConfigManager"]
         reqInterceptor["RequestInterceptor"]
         resInterceptor["ResponseInterceptor"]
+        tokenMgr["TokenManager"]
     end
 
     page --> loginPage
@@ -472,6 +698,15 @@ flowchart LR
     loginPage --> authenticatedPage
     config --> authenticatedPage
 
+    testInfo --> workerIndex
+    request --> workerAuthAPI
+    workerIndex --> workerAuth
+    workerAuthAPI --> workerAuth
+    workerAuth --> workerUserAPI
+    workerAuth --> workerOrderAPI
+    request --> workerUserAPI
+    request --> workerOrderAPI
+
     testInfo --> autoLog
     logger --> autoLog
 
@@ -481,6 +716,8 @@ flowchart LR
     resInterceptor --> authAPI
     resInterceptor --> orderAPI
     resInterceptor --> userAPI
+    reqInterceptor --> tokenMgr
+    workerAuthAPI --> tokenMgr
 ```
 
 ### Fixture Layers
@@ -489,12 +726,20 @@ flowchart LR
 |-------|---------|------|----------|
 | 1 | `baseFixture` | No | `loginPage`, `dashboardPage`, `cartPage`, `checkoutPage`, `ordersPage`, `authAPI`, `userAPI`, `orderAPI` |
 | 2 | `authFixture` | No | `authenticatedPage` (pre-logged-in page via UI) |
-| 3 | `dataFixture` | No | `testUser`, `testOrder` (generated test data) |
-| 4 | `loggingFixture` | **Yes** | Auto-annotations + start/end logging for every test |
+| 3 | `apiAuthFixture` | No | `workerIndex`, `workerAuth`, `workerAuthAPI`, `workerUserAPI`, `workerOrderAPI` (parallel-safe API clients) |
+| 4 | `dataFixture` | No | `testUser`, `testOrder` (generated test data) |
+| 5 | `loggingFixture` | **Yes** | Auto-annotations + start/end logging for every test |
+
+### Fixture Composition
+
+| Export | Fixtures Merged | Use Case |
+|--------|----------------|----------|
+| `test` | baseFixture + authFixture + dataFixture + loggingFixture | UI tests, hybrid tests, sequential API tests |
+| `apiTest` | apiAuthFixture + dataFixture + loggingFixture | Parallel API tests with worker-scoped tokens |
 
 ---
 
-## 7. Sequence Diagrams
+## 8. Sequence Diagrams
 
 ### UI: `loginPage.login()` Call Chain
 
@@ -621,28 +866,89 @@ sequenceDiagram
     Base--xClient: throw Error('API request failed with status 401: Session Timeout')
 ```
 
+### Parallel API: Worker-Scoped Auth Flow
+
+```mermaid
+sequenceDiagram
+    participant T0 as Worker 0 Test
+    participant T1 as Worker 1 Test
+    participant AF as apiAuthFixture
+    participant Auth as AuthAPI
+    participant TM as TokenManager
+    participant RI as RequestInterceptor
+    participant Base as BaseAPI
+    participant Server as Server
+
+    par Worker 0 Setup
+        T0->>AF: workerAuth fixture
+        AF->>AF: workerIndex = testInfo.parallelIndex (0)
+        AF->>Auth: new AuthAPI(request, 0)
+        AF->>Auth: login(credentials)
+        Auth->>Server: POST /auth/login
+        Server-->>Auth: { token: "AAA", userId }
+        Auth->>RI: setWorkerAuthToken(0, "AAA")
+        RI->>TM: workerTokens.set(0, "AAA")
+    and Worker 1 Setup
+        T1->>AF: workerAuth fixture
+        AF->>AF: workerIndex = testInfo.parallelIndex (1)
+        AF->>Auth: new AuthAPI(request, 1)
+        AF->>Auth: login(credentials)
+        Auth->>Server: POST /auth/login
+        Server-->>Auth: { token: "BBB", userId }
+        Auth->>RI: setWorkerAuthToken(1, "BBB")
+        RI->>TM: workerTokens.set(1, "BBB")
+    end
+
+    par Worker 0 Test
+        T0->>Base: workerOrderAPI.getAllProducts()
+        Base->>RI: getWorkerHeaders(0)
+        RI->>TM: resolveToken(0) → "AAA"
+        RI-->>Base: { Authorization: "AAA" }
+        Base->>Server: POST /product/get-all-products
+        Server-->>T0: { data: [...products] }
+    and Worker 1 Test
+        T1->>Base: workerOrderAPI.getOrdersForCustomer()
+        Base->>RI: getWorkerHeaders(1)
+        RI->>TM: resolveToken(1) → "BBB"
+        RI-->>Base: { Authorization: "BBB" }
+        Base->>Server: GET /order/get-orders-for-customer/userId
+        Server-->>T1: { data: [...orders] }
+    end
+
+    par Worker 0 Cleanup
+        T0->>RI: clearWorkerAuthToken(0)
+        RI->>TM: workerTokens.delete(0)
+    and Worker 1 Cleanup
+        T1->>RI: clearWorkerAuthToken(1)
+        RI->>TM: workerTokens.delete(1)
+    end
+```
+
 ---
 
-## 8. UI vs API Comparison
+## 9. UI vs API Comparison
 
-| Aspect | UI Test | API Test |
-|--------|---------|----------|
-| **Playwright provides** | `page` (Browser Page) | `request` (APIRequestContext) |
-| **Base class** | `BasePage` (abstract) | `BaseAPI` (abstract) |
-| **Constructor stores** | `this.page = page` | `this.request = request` |
-| **Interaction methods** | `click()`, `fill()`, `getText()` | `get<T>()`, `post<T>()`, `delete<T>()` |
-| **Auth mechanism** | Browser cookies/session | `RequestInterceptor` (static token) |
-| **Request headers** | Managed by browser | `RequestInterceptor.getHeaders()` |
-| **Response handling** | DOM assertions | `ResponseInterceptor` pipeline |
-| **Waits for** | DOM elements | HTTP responses |
-| **Returns** | Strings, booleans | Typed JSON objects (`LoginResponse`, etc.) |
-| **Artifacts on failure** | Screenshots, video, trace | Logs only |
-| **Browser needed?** | Yes | No |
-| **Speed** | Slower (rendering) | Faster (HTTP only) |
+| Aspect | UI Test | API Test (Legacy) | API Test (Parallel) |
+|--------|---------|----------|---------------------|
+| **Playwright provides** | `page` (Browser Page) | `request` (APIRequestContext) | `request` (APIRequestContext) |
+| **Base class** | `BasePage` (abstract) | `BaseAPI` (abstract) | `BaseAPI` (abstract, workerIndex) |
+| **Fixture export** | `test` | `test` | `apiTest` |
+| **Constructor stores** | `this.page = page` | `this.request = request` | `this.request + this.workerIndex` |
+| **Interaction methods** | `click()`, `fill()`, `getText()` | `get<T>()`, `post<T>()`, `delete<T>()` | Same + worker-aware headers |
+| **Auth mechanism** | Browser cookies/session | `RequestInterceptor` (static token) | `TokenManager` (per-worker Map) |
+| **Request headers** | Managed by browser | `getHeaders()` | `getWorkerHeaders(workerIndex)` |
+| **Token storage** | Browser session | `RequestInterceptor.token` | `TokenManager.workerTokens` |
+| **Parallel safe?** | Yes (isolated contexts) | No (shared static token) | Yes (worker-scoped tokens) |
+| **Response handling** | DOM assertions | `ResponseInterceptor` pipeline | Same |
+| **Waits for** | DOM elements | HTTP responses | Same |
+| **Returns** | Strings, booleans | Typed JSON objects | Same |
+| **Artifacts on failure** | Screenshots, video, trace | Logs only | Logs only |
+| **Browser needed?** | Yes | No | No |
+| **Speed** | Slower (rendering) | Faster (HTTP only) | Fastest (parallel HTTP) |
 
 ---
 
-## 9. Detailed Phase Breakdown
+## 10. Detailed Phase Breakdown
 
 ### Phase 1: Playwright Startup
 
@@ -654,9 +960,17 @@ playwright.config.ts
   |-- defineConfig({
   |     testDir: './tests',
   |     timeout: 30000,
-  |     workers: 1,
+  |     workers: 2,                  // 2 parallel workers
   |     retries: CI ? 2 : 0,
   |     reporters: ['html', 'list', 'allure-playwright'],
+  |     projects: [
+  |       { name: 'api',             // API-only project
+  |         testDir: './tests/api',
+  |         fullyParallel: true,     // All API tests run in parallel
+  |         use: { baseURL: 'https://rahulshettyacademy.com' }
+  |       },
+  |       { name: 'chromium', ... }, // UI projects
+  |     ],
   |     use: {
   |       baseURL: 'https://rahulshettyacademy.com/client/',
   |       screenshot: 'only-on-failure',
@@ -668,10 +982,14 @@ playwright.config.ts
 
 ### Phase 2: Fixture Resolution
 
-Test files import `test` from `src/fixtures/index.ts`:
+Test files import either `test` or `apiTest` from `src/fixtures/index.ts`:
 
 ```typescript
+// Legacy (UI + sequential API)
 export const test = mergeTests(baseFixture, authFixture, dataFixture, loggingFixture);
+
+// Parallel API
+export const apiTest = mergeTests(apiAuthFixture, dataFixture, loggingFixture);
 ```
 
 Playwright resolves which fixtures the test needs based on destructured parameters.
@@ -687,12 +1005,25 @@ new LoginPage(page)
   -> Initialize locators (lazy - no DOM queries yet)
 ```
 
-**API fixtures** create API clients:
+**API fixtures (legacy)** create API clients:
 ```
 new AuthAPI(request)
-  -> super(request) -> BaseAPI()
+  -> super(request) -> BaseAPI(request)
       -> this.request = request
       -> this.logger = Logger.getInstance()
+```
+
+**API fixtures (parallel)** create worker-scoped API clients:
+```
+workerIndex = testInfo.parallelIndex  // e.g. 0, 1, 2...
+new AuthAPI(request, workerIndex)
+  -> super(request, workerIndex) -> BaseAPI(request, 0)
+      -> this.request = request
+      -> this.workerIndex = 0
+      -> this.logger = Logger.getInstance()
+authAPI.login(credentials)
+  -> RequestInterceptor.setWorkerAuthToken(0, token)
+  -> TokenManager.workerTokens.set(0, token)
 ```
 
 ### Phase 4: Logging (Auto)
@@ -749,12 +1080,13 @@ sequenceDiagram
 
 ```
 playwright-framework/
-  playwright.config.ts           # Global config + environment loading
+  playwright.config.ts           # Global config + environment loading + parallel API project
   src/
     fixtures/
-      index.ts                   # mergeTests(base, auth, data, logging)
+      index.ts                   # test = mergeTests(base,auth,data,log) + apiTest = mergeTests(apiAuth,data,log)
       base.fixture.ts            # Page objects + API clients
       auth.fixture.ts            # Pre-authenticated page
+      api-auth.fixture.ts        # Parallel-safe: workerIndex, workerAuth, workerAuthAPI, workerUserAPI, workerOrderAPI
       data.fixture.ts            # Test data (testUser, testOrder)
       logging.fixture.ts         # Auto-annotations + logging
     pages/
@@ -766,19 +1098,20 @@ playwright-framework/
       UserProfilePage.ts         # Orders page
     api/
       clients/
-        AuthAPI.ts               # login() [sets token], register()
-        UserAPI.ts               # registerUser(), getUserDetails()
-        OrderAPI.ts              # getAllProducts(), createOrder(), etc.
+        AuthAPI.ts               # login(workerIndex?), loginShared(), register()
+        UserAPI.ts               # registerUser(), getUserDetails() [workerIndex-aware]
+        OrderAPI.ts              # getAllProducts(), createOrder(), etc. [workerIndex-aware]
       interceptors/
-        RequestInterceptor.ts    # Static token + header management
+        RequestInterceptor.ts    # getHeaders(), getWorkerHeaders(), setWorkerAuthToken(), setSharedAuthToken()
         ResponseInterceptor.ts   # Response logging + error classification
+        TokenManager.ts          # Worker-scoped token Map + shared token + resolveToken()
       models/
         AuthModels.ts            # LoginRequest/Response, RegisterRequest/Response
         UserModels.ts            # CreateUserRequest, UserResponse
         OrderModels.ts           # Product, Order, CreateOrderRequest/Response
     core/
       base/
-        BaseAPI.ts               # Abstract: HTTP methods + interceptor integration
+        BaseAPI.ts               # Abstract: HTTP methods + workerIndex + getRequestHeaders()
         BasePage.ts              # Abstract: page interactions
         BaseComponent.ts         # Abstract: reusable UI components
       logger/
@@ -798,5 +1131,7 @@ playwright-framework/
   tests/
     ui/                          # UI-only tests (login, dashboard)
     api/                         # API-only tests (auth, user, order)
+      parallel-api.spec.ts       # Worker-scoped parallel token tests
+      shared-token-api.spec.ts   # Shared token parallel tests
     hybrid/                      # E2E combining UI + API
 ```

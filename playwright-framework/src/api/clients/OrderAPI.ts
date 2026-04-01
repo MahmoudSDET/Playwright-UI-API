@@ -12,10 +12,11 @@ import {
  * EN: API client for order-related endpoints (products, orders, CRUD).
  *     All methods require prior authentication via AuthAPI.login().
  *     Auth headers are attached automatically by RequestInterceptor.
+ *     Supports worker-scoped tokens for parallel execution.
  */
 export class OrderAPI extends BaseAPI {
-  constructor(request: APIRequestContext) {
-    super(request);
+  constructor(request: APIRequestContext, workerIndex?: number) {
+    super(request, workerIndex);
   }
 
   // EN: Fetch all available products

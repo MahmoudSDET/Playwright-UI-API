@@ -9,22 +9,38 @@ import { ResponseInterceptor } from '../../api/interceptors/ResponseInterceptor'
 /**
  * EN: Abstract base class for all API clients.
  *     Provides common HTTP method wrappers with logging and error handling.
- *     ÙŠÙˆÙØ± Ø£ØºÙ„ÙØ© Ù„Ø¯ÙˆØ§Ù„ HTTP Ø§Ù„Ø´Ø§Ø¦Ø¹Ø© Ù…Ø¹ Ø§Ù„ØªØ³Ø¬ÙŠÙ„ ÙˆÙ…Ø¹Ø§Ù„Ø¬Ø© Ø§Ù„Ø£Ø®Ø·Ø§Ø¡.
+ *     Supports worker-aware token resolution for parallel test execution.
  */
 export abstract class BaseAPI {
   // EN: Logger instance for recording API operations
   protected readonly logger: Logger;
+  // EN: Optional worker index for parallel-safe token resolution
+  protected workerIndex?: number;
 
-  // EN: Constructor receives Playwright's API request context
-  constructor(protected readonly request: APIRequestContext) {
+  // EN: Constructor receives Playwright's API request context and optional worker index
+  constructor(protected readonly request: APIRequestContext, workerIndex?: number) {
     this.logger = Logger.getInstance();
+    this.workerIndex = workerIndex;
+  }
+
+  // EN: Set worker index after construction (e.g., from fixture)
+  setWorkerIndex(workerIndex: number): void {
+    this.workerIndex = workerIndex;
+  }
+
+  // EN: Get headers using worker-aware resolution if workerIndex is set, else legacy
+  private getRequestHeaders(): Record<string, string> {
+    if (this.workerIndex !== undefined) {
+      return RequestInterceptor.getWorkerHeaders(this.workerIndex);
+    }
+    return RequestInterceptor.getHeaders();
   }
 
   // EN: Send a GET request and return parsed response
   protected async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
     this.logger.info(`GET ${endpoint}`);
     const response = await this.request.get(endpoint, {
-      headers: RequestInterceptor.getHeaders(),
+      headers: this.getRequestHeaders(),
       params,
     });
     return this.handleResponse<T>(response);
@@ -34,7 +50,7 @@ export abstract class BaseAPI {
   protected async post<T>(endpoint: string, data?: unknown): Promise<T> {
     this.logger.info(`POST ${endpoint}`);
     const response = await this.request.post(endpoint, {
-      headers: RequestInterceptor.getHeaders(),
+      headers: this.getRequestHeaders(),
       data,
     });
     return this.handleResponse<T>(response);
@@ -44,7 +60,7 @@ export abstract class BaseAPI {
   protected async put<T>(endpoint: string, data?: unknown): Promise<T> {
     this.logger.info(`PUT ${endpoint}`);
     const response = await this.request.put(endpoint, {
-      headers: RequestInterceptor.getHeaders(),
+      headers: this.getRequestHeaders(),
       data,
     });
     return this.handleResponse<T>(response);
@@ -54,7 +70,7 @@ export abstract class BaseAPI {
   protected async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     this.logger.info(`PATCH ${endpoint}`);
     const response = await this.request.patch(endpoint, {
-      headers: RequestInterceptor.getHeaders(),
+      headers: this.getRequestHeaders(),
       data,
     });
     return this.handleResponse<T>(response);
@@ -64,7 +80,7 @@ export abstract class BaseAPI {
   protected async delete<T>(endpoint: string): Promise<T> {
     this.logger.info(`DELETE ${endpoint}`);
     const response = await this.request.delete(endpoint, {
-      headers: RequestInterceptor.getHeaders(),
+      headers: this.getRequestHeaders(),
     });
     return this.handleResponse<T>(response);
   }
@@ -94,7 +110,7 @@ export abstract class BaseAPI {
   protected async getRaw(endpoint: string, params?: Record<string, string>): Promise<APIResponse> {
     this.logger.info(`GET (raw) ${endpoint}`);
     return this.request.get(endpoint, {
-      headers: RequestInterceptor.getHeaders(),
+      headers: this.getRequestHeaders(),
       params,
     });
   }

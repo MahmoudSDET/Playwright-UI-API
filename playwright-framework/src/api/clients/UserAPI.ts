@@ -7,10 +7,11 @@ import { RegisterResponse } from '../models/AuthModels';
 /**
  * EN: API client for user management endpoints.
  *     Uses RequestInterceptor for auth headers on protected routes.
+ *     Supports worker-scoped tokens for parallel execution.
  */
 export class UserAPI extends BaseAPI {
-  constructor(request: APIRequestContext) {
-    super(request);
+  constructor(request: APIRequestContext, workerIndex?: number) {
+    super(request, workerIndex);
   }
 
   // EN: Register a new user via the auth/register endpoint
