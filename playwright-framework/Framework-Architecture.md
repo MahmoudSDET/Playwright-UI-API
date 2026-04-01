@@ -44,7 +44,6 @@
 +-----------------------------+--------------------------------+
 |                SHARED SERVICES                               |
 |  Logger (Singleton)  |  ConfigManager (Singleton)            |
-|  WaitHelper          |  TestAnnotation                      |
 |  TokenManager        |  (worker + shared token management)   |
 +--------------------------------------------------------------+
 |                PLAYWRIGHT ENGINE                             |
@@ -206,24 +205,6 @@ classDiagram
         +static extractErrorMessage(response) Promise~string~
     }
 
-    class BaseComponent {
-        <<abstract>>
-        #page: Page
-        #root: Locator
-        +isVisible() Promise~boolean~
-        +waitForVisible() Promise~void~
-        +waitForHidden() Promise~void~
-    }
-
-    class DataTable {
-        -rows: Locator
-        -headers: Locator
-        +getRowCount() Promise~number~
-        +getHeaderTexts() Promise~string[]~
-        +getCellText(row, col) Promise~string~
-        +clickRow(index) Promise~void~
-    }
-
     class Logger {
         <<singleton>>
         -static instance: Logger
@@ -252,7 +233,6 @@ classDiagram
     BaseAPI <|-- AuthAPI
     BaseAPI <|-- UserAPI
     BaseAPI <|-- OrderAPI
-    BaseComponent <|-- DataTable
 
     BaseAPI ..> RequestInterceptor : getHeaders() / getWorkerHeaders()
     BaseAPI ..> ResponseInterceptor : handleResponse()
@@ -268,7 +248,6 @@ classDiagram
 |------------|---------|------------|---------|
 | `BasePage` (abstract) | Page Object Model | `LoginPage`, `DashboardPage`, `CartPage`, `CheckoutPage`, `OrdersPage` | Browser UI interactions |
 | `BaseAPI` (abstract) | API Client + Interceptors | `AuthAPI`, `UserAPI`, `OrderAPI` | REST API calls with auto headers + worker-aware tokens |
-| `BaseComponent` (abstract) | Component | `DataTable` | Reusable UI components |
 
 ### Singletons
 
@@ -424,12 +403,13 @@ flowchart TB
 
     subgraph P3["Phase 3: Base Fixture Setup"]
         D1 --> E["Playwright creates\nBrowser -> Context -> Page"]
-        E --> F["loginPage:\nnew LoginPage(page)"]
+        E --> PF["pageFactory:\nnew PageFactory(page)"]
+        PF --> F["loginPage:\npageFactory.createLoginPage()"]
         F --> F1["super(page) -> BasePage()"]
         F1 --> F2["this.page = page"]
         F1 --> F3["this.logger = Logger.getInstance()"]
         F --> F4["Initialize Locators:\nemailInput, passwordInput\nloginButton, errorToast"]
-        E --> G["dashboardPage, cartPage\ncheckoutPage, ordersPage\n(same pattern)"]
+        PF --> G["dashboardPage, cartPage\ncheckoutPage, ordersPage\n(via pageFactory.create*())"]
     end
 
     subgraph P4["Phase 4: Logging Fixture (auto)"]
@@ -482,7 +462,6 @@ flowchart TB
         E --> F["authAPI: new AuthAPI(request)"]
         F --> F1["super(request) -> BaseAPI()\nthis.request = request\nthis.logger = Logger.getInstance()"]
         E --> G["orderAPI: new OrderAPI(request)"]
-        E --> H["userAPI: new UserAPI(request)"]
     end
 
     subgraph P4["Phase 4: Logging (auto)"]
@@ -745,13 +724,13 @@ flowchart LR
     end
 
     subgraph Base["baseFixture"]
+        pageFactory["pageFactory\nPageFactory"]
         loginPage["loginPage\nLoginPage"]
         dashboardPage["dashboardPage\nDashboardPage"]
         cartPage["cartPage\nCartPage"]
         checkoutPage["checkoutPage\nCheckoutPage"]
         ordersPage["ordersPage\nOrdersPage"]
         authAPI["authAPI\nAuthAPI"]
-        userAPI["userAPI\nUserAPI"]
         orderAPI["orderAPI\nOrderAPI"]
     end
 
@@ -784,13 +763,13 @@ flowchart LR
         tokenMgr["TokenManager"]
     end
 
-    page --> loginPage
-    page --> dashboardPage
-    page --> cartPage
-    page --> checkoutPage
-    page --> ordersPage
+    page --> pageFactory
+    pageFactory --> loginPage
+    pageFactory --> dashboardPage
+    pageFactory --> cartPage
+    pageFactory --> checkoutPage
+    pageFactory --> ordersPage
     request --> authAPI
-    request --> userAPI
     request --> orderAPI
 
     loginPage --> authenticatedPage
@@ -810,10 +789,8 @@ flowchart LR
 
     authAPI --> reqInterceptor
     reqInterceptor --> orderAPI
-    reqInterceptor --> userAPI
     resInterceptor --> authAPI
     resInterceptor --> orderAPI
-    resInterceptor --> userAPI
     reqInterceptor --> tokenMgr
     workerAuthAPI --> tokenMgr
 ```
@@ -822,7 +799,7 @@ flowchart LR
 
 | Order | Fixture | Auto | Provides |
 |-------|---------|------|----------|
-| 1 | `baseFixture` | No | `loginPage`, `dashboardPage`, `cartPage`, `checkoutPage`, `ordersPage`, `authAPI`, `userAPI`, `orderAPI` |
+| 1 | `baseFixture` | No | `pageFactory`, `loginPage`, `dashboardPage`, `cartPage`, `checkoutPage`, `ordersPage`, `authAPI`, `orderAPI` |
 | 2 | `authFixture` | No | `authenticatedPage` (pre-logged-in page via UI) |
 | 3 | `apiAuthFixture` | No | `workerIndex`, `workerAuth`, `workerAuthAPI`, `workerUserAPI`, `workerOrderAPI` (parallel-safe API clients) |
 | 4 | `dataFixture` | No | `testUser`, `testOrder` (generated test data) |
@@ -1110,18 +1087,25 @@ Playwright resolves which fixtures the test needs based on destructured paramete
 
 ### Phase 3: Fixture Setup
 
-**UI fixtures** create page objects:
+**UI fixtures** create page objects via PageFactory:
 ```
-new LoginPage(page)
-  -> super(page) -> BasePage()
-      -> this.page = page
-      -> this.logger = Logger.getInstance()
-  -> Initialize locators (lazy - no DOM queries yet)
+new PageFactory(page)
+  -> pageFactory.createLoginPage()
+      -> new LoginPage(page)
+          -> super(page) -> BasePage()
+              -> this.page = page
+              -> this.logger = Logger.getInstance()
+          -> Initialize locators (lazy - no DOM queries yet)
+  -> pageFactory.createDashboardPage(), etc.
 ```
 
 **API fixtures (legacy)** create API clients:
 ```
 new AuthAPI(request)
+  -> super(request) -> BaseAPI(request)
+      -> this.request = request
+      -> this.logger = Logger.getInstance()
+new OrderAPI(request)
   -> super(request) -> BaseAPI(request)
       -> this.request = request
       -> this.logger = Logger.getInstance()
@@ -1200,18 +1184,18 @@ playwright-framework/
   src/
     fixtures/
       index.ts                   # test = mergeTests(base,auth,data,log) + apiTest = mergeTests(apiAuth,data,log)
-      base.fixture.ts            # Page objects + API clients
+      base.fixture.ts            # PageFactory + page objects + API clients
       auth.fixture.ts            # Pre-authenticated page
       api-auth.fixture.ts        # Parallel-safe: workerIndex, workerAuth, workerAuthAPI, workerUserAPI, workerOrderAPI
       data.fixture.ts            # Test data (testUser, testOrder)
       logging.fixture.ts         # Auto-annotations + logging
     pages/
-      BasePage.ts                # Abstract: navigate, click, fill, getText
       LoginPage.ts               # Login form interactions
       DashboardPage.ts           # Product listing + cart
       CartPage.ts                # Cart review + checkout
       CheckoutPage.ts            # Country selection + place order
       UserProfilePage.ts         # Orders page
+      locators/                  # Centralized locator definitions
     api/
       clients/
         AuthAPI.ts               # login(workerIndex?), loginShared(), register()
@@ -1229,21 +1213,26 @@ playwright-framework/
       base/
         BaseAPI.ts               # Abstract: HTTP methods + workerIndex + getRequestHeaders() + Allure attachments
         BasePage.ts              # Abstract: page interactions
-        BaseComponent.ts         # Abstract: reusable UI components
       logger/
         Logger.ts                # Winston singleton (console + file)
       config/
         ConfigManager.ts         # Environment-specific config singleton
-    services/
-      UserService.ts             # Facade combining UI + API user flows
+        EnvironmentConfig.ts     # Environment configuration interface
+        environments/            # Per-environment config files
+      strategies/
+        IExecutionStrategy.ts    # Strategy interface
+        LocalStrategy.ts         # Local execution strategy
+        StagingStrategy.ts       # Staging execution strategy
+        CIStrategy.ts            # CI execution strategy
     utils/
-      constants/                 # ErrorMessages, Routes, Selectors
-      decorators/                # retry, step decorators
-      helpers/                   # DateHelper, StringHelper, WaitHelper
-      types/                     # custom-types, global.d.ts
+      helpers/                   # DateHelper, StringHelper, WaitHelper, TestAnnotation
+      types/
+        global.d.ts              # Global type declarations
     data/
-      factories/                 # TestDataFactory
       test-data.ts               # Static test data (credentials, products)
+      test-data.json             # JSON test data
+      builders/                  # UserBuilder, OrderBuilder, AddressBuilder
+      factories/                 # TestDataFactory, PageFactory
   tests/
     ui/                          # UI-only tests (login, dashboard)
     api/                         # API-only tests (auth, user, order)

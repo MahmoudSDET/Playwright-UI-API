@@ -13,10 +13,9 @@ Enterprise-grade test automation framework built with **Playwright** and the **P
   - [Fixtures & Dependency Injection](#2-fixtures--dependency-injection-srcfixtures)
   - [Page Objects & UI](#3-page-objects--ui-srcpages)
   - [API Layer](#4-api-layer-srcapi)
-  - [Business Logic Services](#5-business-logic-services-srcservices)
-  - [Test Data Generation](#6-test-data-generation-srcdata)
-  - [Utilities](#7-utilities-srcutils)
-  - [Test Suites](#8-test-suites-tests)
+  - [Test Data Generation](#5-test-data-generation-srcdata)
+  - [Utilities](#6-utilities-srcutils)
+  - [Test Suites](#7-test-suites-tests)
 - [Configuration](#configuration)
 - [Installation](#installation)
 - [Running Tests](#running-tests)
@@ -42,23 +41,19 @@ Enterprise-grade test automation framework built with **Playwright** and the **P
 |  DashboardPage              |  UserAPI (workerIndex?)        |
 |  CartPage                   |  OrderAPI (workerIndex?)       |
 |  CheckoutPage               |                                |
-|  OrdersPage                 +--------------------------------+
+|  UserProfilePage            +--------------------------------+
 |                             |        INTERCEPTORS            |
 |                             |  RequestInterceptor (headers)  |
 |                             |  ResponseInterceptor (status)  |
 |                             |  TokenManager (worker tokens)  |
 +-----------------------------+--------------------------------+
-|       SERVICES (Facades)                                     |
-|  AuthService (UI vs API login)                               |
-|  UserService (register + view orders)                        |
-+--------------------------------------------------------------+
 |                    CORE FRAMEWORK                             |
-|  BasePage | BaseAPI (+ Allure attachments) | BaseComponent   |
+|  BasePage | BaseAPI (+ Allure attachments)                   |
 |  ConfigManager (Singleton) | Logger (Singleton)              |
 |  Execution Strategies (Local | Staging | CI)                 |
 +--------------------------------------------------------------+
 |               UTILITIES & TEST DATA                          |
-|  Builders | Factories | Helpers | Decorators | Types         |
+|  Builders | Factories | Helpers | Types                      |
 +--------------------------------------------------------------+
 ```
 
@@ -79,9 +74,7 @@ playwright-framework/
 │   ├── core/                         # LAYER 1: Framework foundation
 │   │   ├── base/
 │   │   │   ├── BasePage.ts           # Abstract base for all page objects
-│   │   │   ├── BaseComponent.ts      # Abstract base for reusable UI components
-│   │   │   ├── BaseAPI.ts            # Abstract base for API clients + interceptor integration
-│   │   │   └── BaseTest.ts           # Extended Playwright test with logger
+│   │   │   └── BaseAPI.ts            # Abstract base for API clients + interceptor integration
 │   │   ├── config/
 │   │   │   ├── ConfigManager.ts      # Singleton – loads environment-specific config
 │   │   │   ├── EnvironmentConfig.ts  # Type definition for config shape
@@ -98,7 +91,7 @@ playwright-framework/
 │   │       └── CIStrategy.ts         # Video on failure, 2 retries
 │   │
 │   ├── fixtures/                     # LAYER 2: Dependency injection
-│   │   ├── base.fixture.ts           # Page objects + API clients
+│   │   ├── base.fixture.ts           # PageFactory + API clients
 │   │   ├── auth.fixture.ts           # Pre-authenticated page state
 │   │   ├── api-auth.fixture.ts       # Parallel-safe: workerIndex, workerAuth, worker API clients
 │   │   ├── data.fixture.ts           # Auto-generated test data per test
@@ -110,20 +103,13 @@ playwright-framework/
 │   │   ├── DashboardPage.ts          # Product listing, cart, search
 │   │   ├── CartPage.ts               # Cart items, checkout trigger
 │   │   ├── CheckoutPage.ts          # Country selection, order placement
-│   │   ├── UserProfilePage.ts        # Order history (OrdersPage)
-│   │   ├── components/               # Reusable UI components
-│   │   │   ├── NavigationBar.ts      # Top navbar (home, orders, cart, sign out)
-│   │   │   ├── DataTable.ts          # Generic table component
-│   │   │   └── Modal.ts              # Toast/notification component
+│   │   ├── UserProfilePage.ts        # Order history
 │   │   └── locators/                 # Centralized CSS/XPath selectors
 │   │       ├── login.locators.json
 │   │       ├── dashboard.locators.json
 │   │       ├── cart.locators.json
 │   │       ├── checkout.locators.json
 │   │       ├── orders.locators.json
-│   │       ├── navigationbar.locators.json
-│   │       ├── datatable.locators.json
-│   │       ├── toast.locators.json
 │   │       └── index.ts              # Re-exports all locators as typed objects
 │   │
 │   ├── api/                          # LAYER 4: API testing layer
@@ -140,41 +126,24 @@ playwright-framework/
 │   │       ├── UserModels.ts         # User, CreateUserRequest, UserResponse
 │   │       └── OrderModels.ts        # Product, Order, CreateOrderRequest/Response
 │   │
-│   ├── services/                     # LAYER 5: Business logic facades
-│   │   ├── AuthService.ts            # loginViaUI() vs loginViaAPI()
-│   │   └── UserService.ts            # registerUserViaAPI(), viewOrders()
-│   │
-│   ├── data/                         # LAYER 6: Test data management
+│   ├── data/                         # LAYER 5: Test data management
 │   │   ├── test-data.ts              # Static test data (credentials, products, messages)
 │   │   ├── test-data.json            # JSON source data
 │   │   ├── builders/                 # Builder pattern
 │   │   │   ├── UserBuilder.ts        # Fluent user data builder
 │   │   │   ├── OrderBuilder.ts       # Fluent order data builder
 │   │   │   └── AddressBuilder.ts     # Fluent address data builder
-│   │   ├── factories/                # Factory pattern
-│   │   │   ├── TestDataFactory.ts    # createUniqueUser(), createStandardOrder()
-│   │   │   ├── PageFactory.ts        # Page object factory
-│   │   │   └── APIClientFactory.ts   # API client factory
-│   │   └── fixtures/                 # Static JSON fixtures
-│   │       ├── users.json
-│   │       ├── products.json
-│   │       └── orders.json
+│   │   └── factories/                # Factory pattern
+│   │       ├── TestDataFactory.ts    # createUniqueUser(), createStandardOrder()
+│   │       └── PageFactory.ts        # Page object factory (used by base.fixture)
 │   │
-│   └── utils/                        # LAYER 7: Shared utilities
-│       ├── constants/
-│       │   ├── Routes.ts             # UI routes + API endpoints
-│       │   ├── Selectors.ts          # Global CSS selectors
-│       │   └── ErrorMessages.ts      # Expected error message strings
-│       ├── decorators/
-│       │   ├── step.decorator.ts     # @step() – wraps method in Allure test step
-│       │   └── retry.decorator.ts    # @retry(n, delay) – auto-retry on failure
+│   └── utils/                        # LAYER 6: Shared utilities
 │       ├── helpers/
 │       │   ├── DateHelper.ts         # Date formatting, comparison
 │       │   ├── StringHelper.ts       # Random strings, email generation
 │       │   ├── WaitHelper.ts         # Network idle, URL change, retry logic
 │       │   └── TestAnnotation.ts     # Dynamic test annotation injection
 │       └── types/
-│           ├── custom-types.ts       # ApiResponse<T>, PaginationParams, TestMeta
 │           └── global.d.ts           # ProcessEnv type extensions
 │
 ├── tests/                            # LAYER 8: Test suites
@@ -215,9 +184,7 @@ The foundation layer that every other layer builds upon.
 | Class | Pattern | Purpose |
 |---|---|---|
 | **BasePage** | Template Method | Abstract base for all page objects. Provides `navigate()`, `click()`, `fill()`, `getText()`, `isVisible()`, `selectOption()`, `uploadFile()`, `takeScreenshot()`. Every method auto-waits for element visibility before acting. Injects Winston logger. |
-| **BaseComponent** | Composite | Abstract base for reusable UI components (navbar, table, modal). Scoped to a root locator so interactions are isolated to the component DOM subtree. Provides `isVisible()`, `waitForVisible()`, `waitForHidden()`. |
 | **BaseAPI** | Template Method + Interceptors | Abstract base for API clients. Wraps Playwright's `request` context with typed `get<T>()`, `post<T>()`, `put<T>()`, `patch<T>()`, `delete<T>()`, `getRaw()` methods. Supports optional `workerIndex` for parallel-safe token resolution. Every HTTP method is wrapped in `test.step()` for Allure step nesting, and automatically attaches **Request** (method, URL, masked headers, body) and **Response** (status, URL, body) as JSON attachments to the Allure report via `test.info().attach()`. Uses `RequestInterceptor.getWorkerHeaders(workerIndex)` for unified header injection (worker → shared → legacy token). `handleResponse()` uses `ResponseInterceptor` for logging, status classification, and error extraction. Throws on non-2xx with parsed error message. |
-| **BaseTest** | Fixture Extension | Extends Playwright's `test` with an auto-injected `logger` fixture that logs test start/finish markers. |
 
 #### Configuration (`src/core/config/`)
 
@@ -262,7 +229,7 @@ Playwright fixtures are layered and merged together. Tests import `{ test, expec
 
 | Fixture | Auto | What It Provides |
 |---|---|---|
-| **base.fixture** | No | `loginPage`, `dashboardPage`, `ordersPage`, `cartPage`, `checkoutPage`, `authAPI`, `userAPI`, `orderAPI` – lazily instantiated per test |
+| **base.fixture** | No | `pageFactory`, `loginPage`, `dashboardPage`, `cartPage`, `checkoutPage`, `authAPI`, `orderAPI` – page objects created via `PageFactory` (e.g. `pageFactory.createLoginPage()`), API clients lazily instantiated per test |
 | **auth.fixture** | No | `authenticatedPage` – navigates to login, performs login using ConfigManager credentials. Call explicitly when needed. |
 | **api-auth.fixture** | No | `workerIndex`, `workerAuth` (LoginResponse), `workerAuthAPI`, `workerUserAPI`, `workerOrderAPI` – parallel-safe API clients with per-worker token isolation |
 | **data.fixture** | No | `testUser` (unique user via factory), `testOrder` (standard order) – fresh data per test |
@@ -309,16 +276,6 @@ Each page class extends `BasePage` and encapsulates a single page's locators and
 | **CartPage** | `#/dashboard/cart` | `isProductInCart(name)`, `removeProduct(name)`, `checkout()`, `getTotalPrice()`, `getCartItemCount()` |
 | **CheckoutPage** | `#/dashboard/order` | `selectCountry(prefix)` (autocomplete), `placeOrder()`, `getConfirmationMessage()`, `getOrderId()`, `clickOrdersLink()` |
 | **UserProfilePage** | `#/dashboard/myorders` | `getOrderCount()`, `getOrderIds()`, `viewOrderById(id)`, `hasNoOrders()`, `goBackToShop()` |
-
-#### Reusable Components (`src/pages/components/`)
-
-Components are scoped to a root locator and can be composed into any page:
-
-| Component | Root Selector | Purpose |
-|---|---|---|
-| **NavigationBar** | `.navbar` | `goHome()`, `goToOrders()`, `goToCart()`, `signOut()`, `getCartCount()` |
-| **DataTable** | configurable | `getRowCount()`, `getHeaderTexts()`, `getCellText(row, col)`, `clickRow(index)` |
-| **Modal** | `.toast-container` | `getMessage()`, `isSuccessVisible()`, `isErrorVisible()`, `waitForToast()` |
 
 #### Locators (`src/pages/locators/`)
 
@@ -399,20 +356,7 @@ TypeScript interfaces for all request/response shapes:
 
 ---
 
-### 5. Business Logic Services (`src/services/`)
-
-Services implement the **Facade pattern**, abstracting whether an action is performed via UI or API:
-
-| Service | Methods | Purpose |
-|---|---|---|
-| **AuthService** | `loginViaUI(email, password)` -> navigates & fills login form, `loginViaAPI(email, password)` -> calls `AuthAPI.login()` (fast setup) | Choose UI login (for E2E flow) or API login (fast setup for other tests) |
-| **UserService** | `registerUserViaAPI(data)` -> calls `UserAPI.registerUser()`, `viewOrders()` -> navigates to orders page | Combines registration + order viewing workflows |
-
-**AuthService** accepts both a `Page` and an `APIRequestContext` in its constructor, so it can switch between UI and API login strategies.
-
----
-
-### 6. Test Data Generation (`src/data/`)
+### 5. Test Data Generation (`src/data/`)
 
 #### Static Data (`test-data.ts` / `test-data.json`)
 
@@ -457,39 +401,13 @@ TestDataFactory.createUniqueUser()      // User with timestamp-based unique emai
 TestDataFactory.createStandardOrder(id) // Order for product in India
 TestDataFactory.createStandardAddress() // Default address object
 
-PageFactory.createLoginPage()           // Page object instantiation
-APIClientFactory.createAuthAPI()        // API client instantiation
+PageFactory.createLoginPage(page)       // Page object instantiation via factory
+PageFactory.createDashboardPage(page)   // Used by base.fixture for DI
 ```
-
-#### JSON Fixtures (`src/data/fixtures/`)
-
-Static sample data sets: `users.json` (2 users), `products.json` (3 products), `orders.json` (2 orders).
 
 ---
 
-### 7. Utilities (`src/utils/`)
-
-#### Constants (`src/utils/constants/`)
-
-| File | Contents |
-|---|---|
-| **Routes.ts** | UI routes (`LOGIN`, `DASHBOARD`, `CART`, `ORDERS`) and API endpoints (`AUTH_LOGIN`, `GET_PRODUCTS`, `CREATE_ORDER`, etc.) |
-| **Selectors.ts** | Global CSS selectors organized by page: `LOADING_SPINNER`, `TOAST_SUCCESS`, `PRODUCT_CARD`, `CART_ITEM`, etc. |
-| **ErrorMessages.ts** | Expected error strings: `INVALID_CREDENTIALS`, `EMAIL_REQUIRED`, `USER_EXISTS`, etc. |
-
-#### Decorators (`src/utils/decorators/`)
-
-TypeScript method decorators for cross-cutting concerns:
-
-```typescript
-// Wraps method execution in an Allure test step
-@step('Login with credentials')
-async login(email: string) { ... }
-
-// Retries method up to 3 times with 1s delay between attempts
-@retry(3, 1000)
-async flakyNetworkCall() { ... }
-```
+### 6. Utilities (`src/utils/`)
 
 #### Helpers (`src/utils/helpers/`)
 
@@ -502,12 +420,11 @@ async flakyNetworkCall() { ... }
 
 #### Types (`src/utils/types/`)
 
-- **custom-types.ts** – `ApiResponse<T>`, `PaginationParams`, `TestMeta`
 - **global.d.ts** – Extends `NodeJS.ProcessEnv` with `ENV`, `BASE_URL`, `API_URL`, `LOG_LEVEL`, etc.
 
 ---
 
-### 8. Test Suites (`tests/`)
+### 7. Test Suites (`tests/`)
 
 #### UI Tests (`tests/ui/`)
 
@@ -562,7 +479,6 @@ Combined UI + API tests for end-to-end workflows:
 @core/*     -> src/core/*
 @pages/*    -> src/pages/*
 @api/*      -> src/api/*
-@services/* -> src/services/*
 @data/*     -> src/data/*
 @fixtures/* -> src/fixtures/*
 @utils/*    -> src/utils/*
@@ -729,14 +645,11 @@ Detailed test execution log at `reports/test-execution.log` with timestamps for 
 | **Page Object Model** | `src/pages/` | Encapsulates page interactions behind clean methods |
 | **Template Method** | `BasePage`, `BaseAPI` | Common behavior in base class, specifics in subclasses |
 | **Interceptor** | `RequestInterceptor`, `ResponseInterceptor` | Centralized request header injection and response processing in `BaseAPI` |
-| **Composite** | `BaseComponent`, `NavigationBar`, `DataTable`, `Modal` | Reusable UI components scoped to root locators |
 | **Singleton** | `ConfigManager`, `Logger` | Single instance of config and logger across framework |
 | **Strategy** | `src/core/strategies/` | Environment-specific execution behavior (local/staging/CI) |
 | **Builder** | `UserBuilder`, `OrderBuilder`, `AddressBuilder` | Fluent API for constructing complex test data |
-| **Factory** | `TestDataFactory`, `PageFactory`, `APIClientFactory` | Centralized object creation |
-| **Facade** | `AuthService`, `UserService` | Abstracts UI vs API implementation from tests |
+| **Factory** | `TestDataFactory`, `PageFactory` | Centralized object creation. `PageFactory` is used in `base.fixture` for page object instantiation. |
 | **Dependency Injection** | `src/fixtures/` | Playwright fixtures inject page objects and clients into tests |
-| **Decorator** | `@step()`, `@retry()` | Cross-cutting concerns (reporting, retry logic) |
 
 ---
 
