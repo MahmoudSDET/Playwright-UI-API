@@ -181,3 +181,43 @@
 [2026-04-01 00:10:11] INFO:    [file]: order-api.spec.ts
 [2026-04-01 00:10:11] INFO:    [project]: chromium
 [2026-04-01 00:10:11] INFO: âœ… Test "should get orders for customer" passed (169ms)
+[2026-04-01 00:41:21] INFO: POST /api/ecom/auth/login
+[2026-04-01 00:41:22] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 00:41:22] INFO: â–¶ Starting test: "should get all products" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:41:22] INFO: POST /api/ecom/product/get-all-products
+[2026-04-01 00:41:22] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/product/get-all-products
+[2026-04-01 00:41:22] INFO: ðŸ“‹ Test annotations for "should get all products":
+[2026-04-01 00:41:22] INFO:    [feature]: Order API Tests
+[2026-04-01 00:41:22] INFO:    [suite]: api
+[2026-04-01 00:41:22] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:41:22] INFO:    [project]: chromium
+[2026-04-01 00:41:22] INFO: âœ… Test "should get all products" passed (191ms)
+[2026-04-01 00:41:22] INFO: â–¶ Starting test: "should get orders for customer" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:41:22] INFO: GET /api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:41:23] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:41:23] INFO: ðŸ“‹ Test annotations for "should get orders for customer":
+[2026-04-01 00:41:23] INFO:    [feature]: Order API Tests
+[2026-04-01 00:41:23] INFO:    [suite]: api
+[2026-04-01 00:41:23] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:41:23] INFO:    [project]: chromium
+[2026-04-01 00:41:23] INFO: âœ… Test "should get orders for customer" passed (166ms)
+[2026-04-01 00:44:40] INFO: POST /api/ecom/auth/login
+[2026-04-01 00:44:41] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/auth/login
+[2026-04-01 00:44:41] INFO: â–¶ Starting test: "should get all products" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:44:41] INFO: POST /api/ecom/product/get-all-products
+[2026-04-01 00:44:41] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/product/get-all-products
+[2026-04-01 00:44:41] INFO: ðŸ“‹ Test annotations for "should get all products":
+[2026-04-01 00:44:41] INFO:    [feature]: Order API Tests
+[2026-04-01 00:44:41] INFO:    [suite]: api
+[2026-04-01 00:44:41] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:44:41] INFO:    [project]: chromium
+[2026-04-01 00:44:41] INFO: âœ… Test "should get all products" passed (177ms)
+[2026-04-01 00:44:41] INFO: â–¶ Starting test: "should get orders for customer" [order-api.spec.ts] | Feature: Order API Tests | Suite: api | Project: chromium
+[2026-04-01 00:44:41] INFO: GET /api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:44:41] INFO: Response: 200 https://rahulshettyacademy.com/api/ecom/order/get-orders-for-customer/69c8cc9ff86ba51a6532e688
+[2026-04-01 00:44:41] INFO: ðŸ“‹ Test annotations for "should get orders for customer":
+[2026-04-01 00:44:41] INFO:    [feature]: Order API Tests
+[2026-04-01 00:44:41] INFO:    [suite]: api
+[2026-04-01 00:44:41] INFO:    [file]: order-api.spec.ts
+[2026-04-01 00:44:41] INFO:    [project]: chromium
+[2026-04-01 00:44:41] INFO: âœ… Test "should get orders for customer" passed (173ms)

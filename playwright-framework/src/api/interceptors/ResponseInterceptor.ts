@@ -12,7 +12,9 @@ export class ResponseInterceptor {
   static async logResponse(response: APIResponse): Promise<void> {
     const status = response.status();
     const url = response.url();
+    const body = await response.text();
     ResponseInterceptor.logger.info(`Response: ${status} ${url}`);
+    ResponseInterceptor.logger.info(`Response Body: ${body}`);
   }
 
   // EN: Check if response is successful (2xx) | AR: ÙØ­Øµ Ø¥Ø°Ø§ ÙƒØ§Ù†Øª Ø§Ù„Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ù†Ø§Ø¬Ø­Ø© (2xx)
