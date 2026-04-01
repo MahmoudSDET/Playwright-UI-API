@@ -655,27 +655,27 @@ flowchart TB
     end
 
     subgraph User1["test.describe('E2E User 1/3', { mode: 'serial' })"]
-        C1["Step 1: Register"] --> C2["Step 2: Login"]
-        C2 --> C3["Step 3: Browse Products"]
-        C3 --> C4["Step 4: Create Order"]
-        C4 --> C5["Step 5: Verify Order"]
-        C5 --> C6["Step 6: Delete Order (cleanup)"]
+        C1["Step 1: Register"] --> C2["Step 2: Login\n(save token + userId)"]
+        C2 --> C3["Step 3: Browse Products\n(setAuthToken)"]
+        C3 --> C4["Step 4: Create Order\n(setAuthToken)"]
+        C4 --> C5["Step 5: Verify Order\n(setAuthToken)"]
+        C5 --> C6["Step 6: Delete Order\n(setAuthToken)"]
     end
 
     subgraph User2["test.describe('E2E User 2/3', { mode: 'serial' })"]
-        D1["Step 1: Register"] --> D2["Step 2: Login"]
-        D2 --> D3["Step 3: Browse Products"]
-        D3 --> D4["Step 4: Create Order"]
-        D4 --> D5["Step 5: Verify Order"]
-        D5 --> D6["Step 6: Delete Order"]
+        D1["Step 1: Register"] --> D2["Step 2: Login\n(save token + userId)"]
+        D2 --> D3["Step 3: Browse Products\n(setAuthToken)"]
+        D3 --> D4["Step 4: Create Order\n(setAuthToken)"]
+        D4 --> D5["Step 5: Verify Order\n(setAuthToken)"]
+        D5 --> D6["Step 6: Delete Order\n(setAuthToken)"]
     end
 
     subgraph User3["test.describe('E2E User 3/3', { mode: 'serial' })"]
-        E1["Step 1: Register"] --> E2["Step 2: Login"]
-        E2 --> E3["Step 3: Browse Products"]
-        E3 --> E4["Step 4: Create Order"]
-        E4 --> E5["Step 5: Verify Order"]
-        E5 --> E6["Step 6: Delete Order"]
+        E1["Step 1: Register"] --> E2["Step 2: Login\n(save token + userId)"]
+        E2 --> E3["Step 3: Browse Products\n(setAuthToken)"]
+        E3 --> E4["Step 4: Create Order\n(setAuthToken)"]
+        E4 --> E5["Step 5: Verify Order\n(setAuthToken)"]
+        E5 --> E6["Step 6: Delete Order\n(setAuthToken)"]
     end
 
     B --> User1
@@ -689,6 +689,7 @@ flowchart TB
 
 **Key Design Decisions:**
 - Uses `@playwright/test` directly (not `apiTest` fixture) since each user registers fresh and manages its own token
+- **Shared token pattern**: Login once in Step 2, save `token` + `userId` to shared variables. Steps 3–6 call `RequestInterceptor.setAuthToken(token)` to re-set the saved token (needed because each Playwright test gets a fresh `request` context) — no re-login required
 - `shortId = Date.now() % 100000 + i` keeps firstName/lastName under API's 20-char limit
 - `test.describe.configure({ mode: 'serial' })` ensures steps run in order per user
 - Deterministic titles (`E2E User ${i+1}/${NUM_USERS}`) — required by Playwright for worker process matching

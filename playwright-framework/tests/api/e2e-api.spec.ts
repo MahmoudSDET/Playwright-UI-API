@@ -2,6 +2,7 @@
 import { test, expect } from '@playwright/test';
 import { AuthAPI } from '../../src/api/clients/AuthAPI';
 import { OrderAPI } from '../../src/api/clients/OrderAPI';
+import { RequestInterceptor } from '../../src/api/interceptors/RequestInterceptor';
 import { TestDataFactory } from '../../src/data/factories/TestDataFactory';
 
 /**
@@ -34,6 +35,7 @@ for (let i = 0; i < NUM_USERS; i++) {
 
     // EN: Shared state across serial steps for this user
     let userId: string;
+    let token: string;
     let productId: string;
     let orderId: string;
 
@@ -51,16 +53,14 @@ for (let i = 0; i < NUM_USERS; i++) {
       });
       expect(loginResponse.token).toBeTruthy();
       expect(loginResponse.userId).toBeTruthy();
+      // EN: Save token + userId — reused by all subsequent steps (no re-login)
+      token = loginResponse.token;
       userId = loginResponse.userId;
     });
 
     test('Step 3: Browse and select a product', async ({ request }) => {
-      // EN: Re-login (each test gets a fresh request context in Playwright)
-      const authAPI = new AuthAPI(request);
-      await authAPI.login({
-        userEmail: userData.userEmail,
-        userPassword: userData.userPassword,
-      });
+      // EN: Re-set the shared token (each test gets a fresh request context)
+      RequestInterceptor.setAuthToken(token);
       const orderAPI = new OrderAPI(request);
 
       const products = await orderAPI.getAllProducts();
@@ -73,12 +73,7 @@ for (let i = 0; i < NUM_USERS; i++) {
     });
 
     test('Step 4: Create order with selected product', async ({ request }) => {
-      const authAPI = new AuthAPI(request);
-      const loginResp = await authAPI.login({
-        userEmail: userData.userEmail,
-        userPassword: userData.userPassword,
-      });
-      userId = loginResp.userId;
+      RequestInterceptor.setAuthToken(token);
       const orderAPI = new OrderAPI(request);
 
       const orderResponse = await orderAPI.createOrder({
@@ -91,12 +86,7 @@ for (let i = 0; i < NUM_USERS; i++) {
     });
 
     test('Step 5: Verify order exists for this user', async ({ request }) => {
-      const authAPI = new AuthAPI(request);
-      const loginResp = await authAPI.login({
-        userEmail: userData.userEmail,
-        userPassword: userData.userPassword,
-      });
-      userId = loginResp.userId;
+      RequestInterceptor.setAuthToken(token);
       const orderAPI = new OrderAPI(request);
 
       const orders = await orderAPI.getOrdersForCustomer(userId);
@@ -109,11 +99,7 @@ for (let i = 0; i < NUM_USERS; i++) {
     });
 
     test('Step 6: Delete order (cleanup)', async ({ request }) => {
-      const authAPI = new AuthAPI(request);
-      await authAPI.login({
-        userEmail: userData.userEmail,
-        userPassword: userData.userPassword,
-      });
+      RequestInterceptor.setAuthToken(token);
       const orderAPI = new OrderAPI(request);
 
       const deleteResponse = await orderAPI.deleteOrder(orderId);

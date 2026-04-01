@@ -530,7 +530,7 @@ Pure API tests without browser interaction. Tests call `AuthAPI.login()` in `bef
 | **order-api.spec.ts** | 2 | Get all products (auth required), get customer orders (auth required) |
 | **parallel-api.spec.ts** | 4 | Worker-scoped parallel tests using `apiTest` fixture with `workerAuth` |
 | **shared-token-api.spec.ts** | 4 | Shared token tests — login once in `beforeAll`, all workers share |
-| **e2e-api.spec.ts** | N×6 | Multi-user E2E scenario: Register → Login → Browse → Order → Verify → Delete. `N` = `NUM_USERS` env var (default 3). Serial within each user, parallel across users. |
+| **e2e-api.spec.ts** | N×6 | Multi-user E2E scenario: Register → Login → Browse → Order → Verify → Delete. Login once in Step 2, token shared across Steps 3–6 via `RequestInterceptor.setAuthToken()`. `N` = `NUM_USERS` env var (default 3). Serial within each user, parallel across users. |
 
 #### Hybrid/E2E Tests (`tests/hybrid/`)
 
