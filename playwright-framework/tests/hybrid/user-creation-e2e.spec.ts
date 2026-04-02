@@ -38,6 +38,7 @@ test.describe('User Registration E2E (Hybrid)', () => {
     loginPage,
     dashboardPage,
     page,
+    softAssert,
   }) => {
     const userEmail = credentials.valid.email;
 
@@ -49,12 +50,14 @@ test.describe('User Registration E2E (Hybrid)', () => {
 
     await test.step('Verify products are displayed', async () => {
       const productNames = await dashboardPage.getProductNames();
-      expect(productNames.length).toBeGreaterThan(0);
+      softAssert.assertGreaterThan('Product catalog should have items', productNames.length, 0);
     });
 
     await test.step(`Verify product "${products.adidasOriginal}" exists`, async () => {
       const hasAdidas = await dashboardPage.isProductVisible(products.adidasOriginal);
-      expect(hasAdidas).toBeTruthy();
+      softAssert.assertTrue(`Product "${products.adidasOriginal}" should be visible`, hasAdidas);
     });
+
+    await softAssert.assertAll();
   });
 });

@@ -2,7 +2,7 @@
 
 ---
 
-## Section 1: Design Patterns (20 Questions)
+## Section 1: Design Patterns (16 Questions)
 
 ### Q1. Which design pattern does `ConfigManager` implement?
 - A) Factory
@@ -54,37 +54,7 @@
 
 ---
 
-### Q6. What pattern is represented by `IExecutionStrategy`, `LocalStrategy`, and `CIStrategy`?
-- A) Template Method
-- B) Factory
-- C) Strategy
-- D) Command
-
-<details><summary>Answer</summary>C) Strategy — `IExecutionStrategy` defines an interface, and `LocalStrategy`/`CIStrategy` provide different implementations for different execution environments.</details>
-
----
-
-### Q7. What does `LocalStrategy.getRetryCount()` return?
-- A) 1
-- B) 2
-- C) 3
-- D) 0
-
-<details><summary>Answer</summary>D) 0 — Local development doesn't retry failed tests.</details>
-
----
-
-### Q8. What does `CIStrategy.shouldRecordVideo()` return?
-- A) `false`
-- B) `true`
-- C) Depends on config
-- D) `undefined`
-
-<details><summary>Answer</summary>B) true — In CI, video is always recorded for debugging failed tests.</details>
-
----
-
-### Q9. Which pattern do `PageFactory` and `APIClientFactory` implement?
+### Q6. Which pattern do `PageFactory` and `APIClientFactory` implement?
 - A) Abstract Factory
 - B) Factory Method
 - C) Simple Factory
@@ -94,7 +64,7 @@
 
 ---
 
-### Q10. What pattern does `BaseComponent` represent?
+### Q7. What pattern does `BaseComponent` represent?
 - A) Composite
 - B) Component Pattern
 - C) Decorator
@@ -104,7 +74,7 @@
 
 ---
 
-### Q11. What does `OrderBuilder.build()` return?
+### Q8. What does `OrderBuilder.build()` return?
 - A) A reference to the internal data
 - B) A shallow copy with `{ ...this.data }`
 - C) A deep copy with spread on both the object and the orders array
@@ -114,7 +84,7 @@
 
 ---
 
-### Q12. What does `UserBuilder.build()` return?
+### Q9. What does `UserBuilder.build()` return?
 - A) A deep copy of the data
 - B) A shallow copy using `{ ...this.data }`
 - C) The original data reference
@@ -124,7 +94,7 @@
 
 ---
 
-### Q13. `BasePage` is:
+### Q10. `BasePage` is:
 - A) A concrete class
 - B) An interface
 - C) An abstract class
@@ -134,17 +104,7 @@
 
 ---
 
-### Q14. Which of the following is NOT a method defined in `IExecutionStrategy`?
-- A) `setup()`
-- B) `teardown()`
-- C) `getBaseURL()`
-- D) `getConfig()`
-
-<details><summary>Answer</summary>D) getConfig() — The interface defines `setup()`, `teardown()`, `getBaseURL()`, `shouldRecordVideo()`, and `getRetryCount()`.</details>
-
----
-
-### Q15. The `@step` decorator wraps a method with:
+### Q11. The `@step` decorator wraps a method with:
 - A) `try/catch`
 - B) `test.step()` for Allure reporting
 - C) `setTimeout()`
@@ -154,7 +114,7 @@
 
 ---
 
-### Q16. What are the default parameters for `@retry()`?
+### Q12. What are the default parameters for `@retry()`?
 - A) maxAttempts = 5, delayMs = 2000
 - B) maxAttempts = 3, delayMs = 1000
 - C) maxAttempts = 3, delayMs = 500
@@ -164,7 +124,7 @@
 
 ---
 
-### Q17. What does `RequestInterceptor` use to manage the auth token?
+### Q13. What does `RequestInterceptor` use to manage the auth token?
 - A) Instance property
 - B) Static property (`private static token`)
 - C) Local storage
@@ -174,7 +134,7 @@
 
 ---
 
-### Q18. How does `RequestInterceptor.getHeaders()` handle the Authorization header?
+### Q14. How does `RequestInterceptor.getHeaders()` handle the Authorization header?
 - A) Always includes it
 - B) Includes it only if `token` is not null
 - C) Reads it from environment variables
@@ -184,7 +144,7 @@
 
 ---
 
-### Q19. Page Object classes store their selectors as:
+### Q15. Page Object classes store their selectors as:
 - A) Public static constants
 - B) Private readonly Locator fields
 - C) External JSON files
@@ -194,7 +154,7 @@
 
 ---
 
-### Q20. What is `BasePage.path`?
+### Q16. What is `BasePage.path`?
 - A) A concrete property with default value
 - B) An abstract readonly property that subclasses must implement
 - C) A static constant
@@ -206,7 +166,7 @@
 
 ## Section 2: TypeScript Features (15 Questions)
 
-### Q21. What TypeScript feature does `ConfigManager.get()` use for type-safe access?
+### Q17. What TypeScript feature does `ConfigManager.get()` use for type-safe access?
 - A) Function overloading
 - B) Conditional types
 - C) Generic constraint with `keyof` (`K extends keyof EnvironmentConfig`)
@@ -216,7 +176,7 @@
 
 ---
 
-### Q22. What is the return type of `BaseAPI.get<T>()`?
+### Q18. What is the return type of `BaseAPI.get<T>()`?
 - A) `T`
 - B) `Promise<T>`
 - C) `APIResponse`
@@ -226,7 +186,7 @@
 
 ---
 
-### Q23. What TypeScript assertion does `const Routes = { ... } as const` provide?
+### Q19. What TypeScript assertion does `const Routes = { ... } as const` provide?
 - A) Makes all values `string`
 - B) Makes the object deeply immutable (readonly) with literal types
 - C) Converts to JSON
@@ -236,7 +196,7 @@
 
 ---
 
-### Q24. The `Environment` type is defined as:
+### Q20. The `Environment` type is defined as:
 - A) `enum Environment { Local, Staging, Production }`
 - B) `type Environment = 'local' | 'staging' | 'production'`
 - C) `interface Environment { name: string }`
@@ -246,7 +206,7 @@
 
 ---
 
-### Q25. What TypeScript type does `ApiResponse<T>` represent?
+### Q21. What TypeScript type does `ApiResponse<T>` represent?
 - A) `{ data: T; status: number; message?: string }`
 - B) `{ body: T; code: number }`
 - C) `Promise<T>`
@@ -256,7 +216,7 @@
 
 ---
 
-### Q26. How does `@step` decorator access the original method?
+### Q22. How does `@step` decorator access the original method?
 - A) `target.method`
 - B) `descriptor.value`
 - C) `propertyKey()`
@@ -266,7 +226,7 @@
 
 ---
 
-### Q27. What is the type of `TestMeta.severity`?
+### Q23. What is the type of `TestMeta.severity`?
 - A) `string`
 - B) `number`
 - C) `'blocker' | 'critical' | 'normal' | 'minor' | 'trivial'`
@@ -276,7 +236,7 @@
 
 ---
 
-### Q28. What does `protected readonly page: Page` in `BasePage` constructor mean?
+### Q24. What does `protected readonly page: Page` in `BasePage` constructor mean?
 - A) `page` is public and mutable
 - B) `page` is accessible in subclasses, assignable once
 - C) `page` is private and immutable
@@ -286,7 +246,7 @@
 
 ---
 
-### Q29. The `configs` object in `ConfigManager` uses which TypeScript utility type?
+### Q25. The `configs` object in `ConfigManager` uses which TypeScript utility type?
 - A) `Partial<Environment>`
 - B) `Map<Environment, EnvironmentConfig>`
 - C) `Record<Environment, EnvironmentConfig>`
@@ -296,7 +256,7 @@
 
 ---
 
-### Q30. What TypeScript feature does the `@retry` decorator use to re-throw the last error?
+### Q26. What TypeScript feature does the `@retry` decorator use to re-throw the last error?
 - A) Type narrowing
 - B) `lastError` typed as `Error | undefined`, thrown after loop
 - C) Custom error class
@@ -306,7 +266,7 @@
 
 ---
 
-### Q31. What does `data?: unknown` in `BaseAPI.post<T>(endpoint, data?)` indicate?
+### Q27. What does `data?: unknown` in `BaseAPI.post<T>(endpoint, data?)` indicate?
 - A) `data` accepts any type and is optional
 - B) `data` must be a string
 - C) `data` is required
@@ -316,7 +276,7 @@
 
 ---
 
-### Q32. What TypeScript syntax makes `PaginationParams.sortOrder` accept only `'asc'` or `'desc'`?
+### Q28. What TypeScript syntax makes `PaginationParams.sortOrder` accept only `'asc'` or `'desc'`?
 - A) `sortOrder: string`
 - B) `sortOrder?: 'asc' | 'desc'`
 - C) `sortOrder: enum`
@@ -326,7 +286,7 @@
 
 ---
 
-### Q33. What does `??` (nullish coalescing) do in `getCellText()`?
+### Q29. What does `??` (nullish coalescing) do in `getCellText()`?
 ```typescript
 (await this.rows.nth(row).locator('td').nth(col).textContent()) ?? ''
 ```
@@ -339,7 +299,7 @@
 
 ---
 
-### Q34. Why is `EnvironmentConfig.credentials` a nested object?
+### Q30. Why is `EnvironmentConfig.credentials` a nested object?
 - A) For serialization
 - B) To group related email/password fields into a cohesive structure
 - C) TypeScript requires it
@@ -349,7 +309,7 @@
 
 ---
 
-### Q35. What TypeScript feature allows `WaitHelper.retryAction<T>()` to work with any return type?
+### Q31. What TypeScript feature allows `WaitHelper.retryAction<T>()` to work with any return type?
 - A) `any` type
 - B) Generic type parameter `<T>`
 - C) Type assertion
@@ -361,7 +321,7 @@
 
 ## Section 3: Playwright-Specific (15 Questions)
 
-### Q36. What Playwright function composes the four fixture layers in `index.ts`?
+### Q32. What Playwright function composes the four fixture layers in `index.ts`?
 - A) `test.extend()`
 - B) `mergeTests()`
 - C) `test.use()`
@@ -371,7 +331,7 @@
 
 ---
 
-### Q37. What does `{ auto: true }` mean in a Playwright fixture?
+### Q33. What does `{ auto: true }` mean in a Playwright fixture?
 - A) The fixture runs manually when called
 - B) The fixture runs automatically for every test without being requested
 - C) The fixture runs once per suite
@@ -381,7 +341,7 @@
 
 ---
 
-### Q38. What does `{ auto: false }` on `authenticatedPage` fixture mean?
+### Q34. What does `{ auto: false }` on `authenticatedPage` fixture mean?
 - A) It runs before every test
 - B) It must be explicitly requested in the test function parameters
 - C) It runs only in CI
@@ -391,7 +351,7 @@
 
 ---
 
-### Q39. What does `test.describe.configure({ mode: 'serial' })` do?
+### Q35. What does `test.describe.configure({ mode: 'serial' })` do?
 - A) Runs tests in random order
 - B) Runs tests in parallel
 - C) Runs tests sequentially, and skips remaining tests if one fails
@@ -401,7 +361,7 @@
 
 ---
 
-### Q40. In `playwright.config.ts`, what does `trace: 'on-first-retry'` mean?
+### Q36. In `playwright.config.ts`, what does `trace: 'on-first-retry'` mean?
 - A) Trace is always recorded
 - B) Trace is recorded only on the first retry of a failed test
 - C) Trace is never recorded
@@ -411,7 +371,7 @@
 
 ---
 
-### Q41. What does `screenshot: { mode: 'only-on-failure', fullPage: true }` configure?
+### Q37. What does `screenshot: { mode: 'only-on-failure', fullPage: true }` configure?
 - A) Screenshots on every test
 - B) Screenshots only when a test fails, capturing the full scrollable page
 - C) No screenshots
@@ -421,7 +381,7 @@
 
 ---
 
-### Q42. What does `video: 'retain-on-failure'` mean?
+### Q38. What does `video: 'retain-on-failure'` mean?
 - A) Video is always saved
 - B) Video is recorded for all tests but only kept for failed ones
 - C) Video is never recorded
@@ -431,7 +391,7 @@
 
 ---
 
-### Q43. How many browser projects are configured in `playwright.config.ts`?
+### Q39. How many browser projects are configured in `playwright.config.ts`?
 - A) 2
 - B) 3
 - C) 4
@@ -441,7 +401,7 @@
 
 ---
 
-### Q44. What is `fullyParallel: false` in the config?
+### Q40. What is `fullyParallel: false` in the config?
 - A) Tests within a file run in parallel
 - B) Tests within a file run serially (one at a time)
 - C) All files run serially
@@ -451,7 +411,7 @@
 
 ---
 
-### Q45. What reporter configurations are defined?
+### Q41. What reporter configurations are defined?
 - A) HTML only
 - B) HTML, list, and allure-playwright
 - C) JSON and JUnit
@@ -461,7 +421,7 @@
 
 ---
 
-### Q46. What is the global test timeout set to?
+### Q42. What is the global test timeout set to?
 - A) 10 seconds
 - B) 15 seconds
 - C) 30 seconds
@@ -471,7 +431,7 @@
 
 ---
 
-### Q47. What are `actionTimeout` and `navigationTimeout` set to?
+### Q43. What are `actionTimeout` and `navigationTimeout` set to?
 - A) 5 seconds each
 - B) 10 seconds each
 - C) 15 seconds each
@@ -481,7 +441,7 @@
 
 ---
 
-### Q48. What does `forbidOnly: !!process.env.CI` do?
+### Q44. What does `forbidOnly: !!process.env.CI` do?
 - A) Allows `test.only` in CI
 - B) Fails the test run in CI if `test.only` is found in the code
 - C) Disables all tests in CI
@@ -491,7 +451,7 @@
 
 ---
 
-### Q49. What does `expect: { timeout: 10_000 }` configure?
+### Q45. What does `expect: { timeout: 10_000 }` configure?
 - A) Global test timeout
 - B) Maximum time for each `expect()` assertion to pass
 - C) Network request timeout
@@ -501,7 +461,7 @@
 
 ---
 
-### Q50. What does `retries: process.env.CI ? 2 : 0` mean?
+### Q46. What does `retries: process.env.CI ? 2 : 0` mean?
 - A) Always retry 2 times
 - B) Retry 2 times in CI, 0 times locally
 - C) Retry 0 times in CI, 2 locally
@@ -513,7 +473,7 @@
 
 ## Section 4: Framework Architecture (15 Questions)
 
-### Q51. What is the base URL of the application under test?
+### Q47. What is the base URL of the application under test?
 - A) `https://rahulshettyacademy.com/`
 - B) `https://rahulshettyacademy.com/client/`
 - C) `https://rahulshettyacademy.com/api/`
@@ -523,7 +483,7 @@
 
 ---
 
-### Q52. Which class do all page objects inherit from?
+### Q48. Which class do all page objects inherit from?
 - A) `Page`
 - B) `BaseComponent`
 - C) `BasePage`
@@ -533,7 +493,7 @@
 
 ---
 
-### Q53. What protected methods does `BasePage` provide to subclasses?
+### Q49. What protected methods does `BasePage` provide to subclasses?
 - A) `get()`, `post()`, `put()`, `delete()`
 - B) `click()`, `fill()`, `getText()`, `isVisible()`, `selectOption()`, `uploadFile()`, `takeScreenshot()`
 - C) `login()`, `logout()`, `navigate()`
@@ -543,7 +503,7 @@
 
 ---
 
-### Q54. Which class do all API client classes inherit from?
+### Q50. Which class do all API client classes inherit from?
 - A) `BasePage`
 - B) `BaseComponent`
 - C) `BaseAPI`
@@ -553,7 +513,7 @@
 
 ---
 
-### Q55. What does `BaseAPI.handleResponse<T>()` do when `response.ok()` is false?
+### Q51. What does `BaseAPI.handleResponse<T>()` do when `response.ok()` is false?
 - A) Returns `null`
 - B) Returns an empty object
 - C) Logs the error and throws an `Error` with status code and body
@@ -563,7 +523,7 @@
 
 ---
 
-### Q56. The logging fixture adds which annotations to each test?
+### Q52. The logging fixture adds which annotations to each test?
 - A) Only `feature`
 - B) `feature`, `suite`, `file`, and `project`
 - C) `severity` and `owner`
@@ -573,7 +533,7 @@
 
 ---
 
-### Q57. How does the logging fixture extract the `suite` value?
+### Q53. How does the logging fixture extract the `suite` value?
 - A) From the test title
 - B) From the file path (extracting 'ui', 'api', or 'hybrid')
 - C) From an environment variable
@@ -583,7 +543,7 @@
 
 ---
 
-### Q58. What logging library does the framework use?
+### Q54. What logging library does the framework use?
 - A) console.log
 - B) Pino
 - C) Winston
@@ -593,7 +553,7 @@
 
 ---
 
-### Q59. Where does the Logger write log files?
+### Q55. Where does the Logger write log files?
 - A) `logs/app.log`
 - B) `reports/test-execution.log`
 - C) `output/debug.log`
@@ -603,7 +563,7 @@
 
 ---
 
-### Q60. What format does the Logger use for timestamps?
+### Q56. What format does the Logger use for timestamps?
 - A) ISO 8601
 - B) Unix timestamp
 - C) `YYYY-MM-DD HH:mm:ss`
@@ -613,7 +573,7 @@
 
 ---
 
-### Q61. How does `ConfigManager` determine which environment config to load?
+### Q57. How does `ConfigManager` determine which environment config to load?
 - A) Command line argument
 - B) `process.env.ENV || 'local'`
 - C) A JSON file
@@ -623,7 +583,7 @@
 
 ---
 
-### Q62. What happens if `ConfigManager.loadConfig()` receives an unknown environment?
+### Q58. What happens if `ConfigManager.loadConfig()` receives an unknown environment?
 - A) Returns default config
 - B) Returns `null`
 - C) Throws `Error('Unknown environment: ...')`
@@ -633,7 +593,7 @@
 
 ---
 
-### Q63. How does `TestDataFactory.createUniqueUser()` guarantee unique emails?
+### Q59. How does `TestDataFactory.createUniqueUser()` guarantee unique emails?
 - A) UUID
 - B) Random number
 - C) Timestamp-based suffix (or custom suffix)
@@ -643,7 +603,7 @@
 
 ---
 
-### Q64. What are the four fixture layers (in merge order)?
+### Q60. What are the four fixture layers (in merge order)?
 - A) auth → base → data → logging
 - B) base → auth → data → logging
 - C) logging → base → auth → data
@@ -653,7 +613,7 @@
 
 ---
 
-### Q65. In the hybrid E2E test, what does `beforeEach` do?
+### Q61. In the hybrid E2E test, what does `beforeEach` do?
 - A) Creates a new browser
 - B) Clears cookies, localStorage, sessionStorage, and reloads the page
 - C) Runs login
@@ -665,7 +625,7 @@
 
 ## Section 5: Test Organization & Best Practices (10 Questions)
 
-### Q66. What are the three test categories in this framework?
+### Q62. What are the three test categories in this framework?
 - A) unit, integration, system
 - B) ui, api, hybrid
 - C) smoke, regression, sanity
@@ -675,7 +635,7 @@
 
 ---
 
-### Q67. Where do test files import `test` and `expect` from?
+### Q63. Where do test files import `test` and `expect` from?
 - A) `@playwright/test`
 - B) `../../src/fixtures/index`
 - C) `jest`
@@ -685,7 +645,7 @@
 
 ---
 
-### Q68. Why do hybrid E2E tests use `test.describe.configure({ mode: 'serial' })`?
+### Q64. Why do hybrid E2E tests use `test.describe.configure({ mode: 'serial' })`?
 - A) For performance
 - B) Because tests depend on shared state (e.g., login → add to cart → checkout)
 - C) Playwright requires it
@@ -695,7 +655,7 @@
 
 ---
 
-### Q69. What does `test.step()` provide in test reports?
+### Q65. What does `test.step()` provide in test reports?
 - A) Code coverage
 - B) Named sub-steps visible in Allure and HTML reports
 - C) Performance metrics
@@ -705,7 +665,7 @@
 
 ---
 
-### Q70. What error message constant verifies a successful registration?
+### Q66. What error message constant verifies a successful registration?
 - A) `ErrorMessages.LOGIN.INVALID_CREDENTIALS`
 - B) `ErrorMessages.REGISTER.SUCCESS` → `'Registered Successfully'`
 - C) `ErrorMessages.ORDER.ORDER_PLACED`
@@ -715,7 +675,7 @@
 
 ---
 
-### Q71. What CSS selector targets the login button?
+### Q67. What CSS selector targets the login button?
 - A) `.login-btn`
 - B) `#login`
 - C) `button[type="submit"]`
@@ -725,7 +685,7 @@
 
 ---
 
-### Q72. What does `WaitHelper.waitForNetworkIdle()` do?
+### Q68. What does `WaitHelper.waitForNetworkIdle()` do?
 - A) Waits for page to load
 - B) Waits until no network requests are in-flight for a duration
 - C) Waits for a specific URL
@@ -735,7 +695,7 @@
 
 ---
 
-### Q73. In the `@retry` decorator, what happens between retry attempts?
+### Q69. In the `@retry` decorator, what happens between retry attempts?
 - A) Nothing
 - B) A warning is logged and execution is delayed by `delayMs`
 - C) The test is restarted
@@ -745,7 +705,7 @@
 
 ---
 
-### Q74. What method does `DataTable` use to get the text of a specific cell?
+### Q70. What method does `DataTable` use to get the text of a specific cell?
 - A) `getCellText(row, col)` using `this.rows.nth(row).locator('td').nth(col).textContent()`
 - B) `getCell(row, col)`
 - C) `readCell(row, col)`
@@ -755,7 +715,7 @@
 
 ---
 
-### Q75. What is the `dotenv` configuration loading in `playwright.config.ts`?
+### Q71. What is the `dotenv` configuration loading in `playwright.config.ts`?
 - A) A single `.env` file
 - B) Environment-specific file: `.env.{env}` (e.g., `.env.local`)
 - C) A JSON config
@@ -765,9 +725,9 @@
 
 ---
 
-## Section 6: Advanced Patterns & Edge Cases (25 Questions)
+## Section 6: Advanced Patterns & Edge Cases (29 Questions)
 
-### Q76. What does `BaseComponent` constructor accept?
+### Q72. What does `BaseComponent` constructor accept?
 - A) Only a `Page` object
 - B) A `Page` and a root `Locator`
 - C) A `string` selector
@@ -777,7 +737,7 @@
 
 ---
 
-### Q77. In `OrderAPI`, why is `token` stored as a private instance field instead of using `RequestInterceptor`?
+### Q73. In `OrderAPI`, why is `token` stored as a private instance field instead of using `RequestInterceptor`?
 - A) RequestInterceptor doesn't exist
 - B) To allow each OrderAPI instance to have its own token, independent of the global interceptor
 - C) TypeScript doesn't allow static access
@@ -787,7 +747,7 @@
 
 ---
 
-### Q78. What does `BaseAPI.getRaw()` return compared to `BaseAPI.get<T>()`?
+### Q74. What does `BaseAPI.getRaw()` return compared to `BaseAPI.get<T>()`?
 - A) Both return `Promise<T>`
 - B) `getRaw()` returns `Promise<APIResponse>` (unparsed), `get<T>()` returns `Promise<T>` (parsed JSON)
 - C) `getRaw()` returns a string
@@ -797,7 +757,7 @@
 
 ---
 
-### Q79. What happens when `UserBuilder.withPassword()` is called?
+### Q75. What happens when `UserBuilder.withPassword()` is called?
 - A) Only `userPassword` is set
 - B) Both `userPassword` and `confirmPassword` are set to the same value
 - C) Only `confirmPassword` is set
@@ -807,7 +767,7 @@
 
 ---
 
-### Q80. What is the default `occupation` in `UserBuilder`?
+### Q76. What is the default `occupation` in `UserBuilder`?
 - A) `'Engineer'`
 - B) `'Developer'`
 - C) `'Student'`
@@ -817,7 +777,7 @@
 
 ---
 
-### Q81. What is the difference between `workers: 1` locally vs in CI?
+### Q77. What is the difference between `workers: 1` locally vs in CI?
 - A) CI uses more workers
 - B) Both are set to `1` — no difference
 - C) Local uses 0
@@ -827,7 +787,7 @@
 
 ---
 
-### Q82. What selector constant targets the loading spinner?
+### Q78. What selector constant targets the loading spinner?
 - A) `Selectors.LOADER`
 - B) `Selectors.LOADING_SPINNER` → `'ngx-spinner'`
 - C) `Selectors.SPINNER`
@@ -837,7 +797,7 @@
 
 ---
 
-### Q83. How does `ResponseInterceptor` differ from `RequestInterceptor`?
+### Q79. How does `ResponseInterceptor` differ from `RequestInterceptor`?
 - A) They are the same class
 - B) `RequestInterceptor` manages outgoing headers/tokens; `ResponseInterceptor` handles incoming response processing
 - C) `ResponseInterceptor` manages tokens
@@ -847,7 +807,7 @@
 
 ---
 
-### Q84. What is `Selectors.TOAST_SUCCESS`?
+### Q80. What is `Selectors.TOAST_SUCCESS`?
 - A) `'.toast-success'`
 - B) `'.toast-success .toast-message'`
 - C) `'#toast'`
@@ -857,7 +817,7 @@
 
 ---
 
-### Q85. In the fixture system, which fixture creates `testUser` and `testOrder` instances?
+### Q81. In the fixture system, which fixture creates `testUser` and `testOrder` instances?
 - A) base.fixture.ts
 - B) auth.fixture.ts
 - C) data.fixture.ts
@@ -867,7 +827,7 @@
 
 ---
 
-### Q86. What does `BaseComponent.waitForVisible()` do?
+### Q82. What does `BaseComponent.waitForVisible()` do?
 - A) Clicks the component
 - B) Waits until the root locator becomes visible on the page
 - C) Scrolls to the component
@@ -877,7 +837,7 @@
 
 ---
 
-### Q87. What HTTP methods does `BaseAPI` expose as protected?
+### Q83. What HTTP methods does `BaseAPI` expose as protected?
 - A) Only `get` and `post`
 - B) `get`, `post`, `put`, `delete`
 - C) `get`, `post`, `put`, `patch`, `delete`, and `getRaw`
@@ -887,7 +847,7 @@
 
 ---
 
-### Q88. What does `AddressBuilder` produce?
+### Q84. What does `AddressBuilder` produce?
 - A) A `CreateUserRequest`
 - B) A `CreateOrderRequest`
 - C) An address object used in orders or user profiles
@@ -897,7 +857,7 @@
 
 ---
 
-### Q89. What is `Routes.API.AUTH_LOGIN`?
+### Q85. What is `Routes.API.AUTH_LOGIN`?
 - A) `'/login'`
 - B) `'/api/ecom/auth/login'`
 - C) `'/auth/login'`
@@ -907,7 +867,7 @@
 
 ---
 
-### Q90. What does `Routes.HOME` resolve to?
+### Q86. What does `Routes.HOME` resolve to?
 - A) `'/'`
 - B) `'#/dashboard/dash'`
 - C) `'/home'`
@@ -917,7 +877,7 @@
 
 ---
 
-### Q91. What is the `expect` timeout vs the global `timeout`?
+### Q87. What is the `expect` timeout vs the global `timeout`?
 - A) Both are 30 seconds
 - B) `expect` is 10s for assertions; global is 30s for the entire test
 - C) `expect` is 30s; global is 10s
@@ -927,7 +887,7 @@
 
 ---
 
-### Q92. What does `WaitHelper.retryAction<T>()` accept as its first parameter?
+### Q88. What does `WaitHelper.retryAction<T>()` accept as its first parameter?
 - A) A string
 - B) A callback function `() => Promise<T>`
 - C) A Locator
@@ -937,7 +897,7 @@
 
 ---
 
-### Q93. What does `WaitHelper.delay(ms)` do?
+### Q89. What does `WaitHelper.delay(ms)` do?
 - A) Blocks the thread
 - B) Returns `new Promise(resolve => setTimeout(resolve, ms))` — a non-blocking pause
 - C) Refreshes the page
@@ -947,7 +907,7 @@
 
 ---
 
-### Q94. What is the `outputDir` in `playwright.config.ts` used for?
+### Q90. What is the `outputDir` in `playwright.config.ts` used for?
 - A) Test source files
 - B) Test artifacts like screenshots: `'reports/screenshots'`
 - C) Node modules
@@ -957,7 +917,7 @@
 
 ---
 
-### Q95. In hybrid E2E tests, why does `beforeEach` clear both cookies AND localStorage/sessionStorage?
+### Q91. In hybrid E2E tests, why does `beforeEach` clear both cookies AND localStorage/sessionStorage?
 - A) It's redundant
 - B) Cookies handle server-side state; localStorage/sessionStorage handle client-side state — both must be cleared for a clean test
 - C) Only cookies matter
@@ -967,7 +927,7 @@
 
 ---
 
-### Q96. Which mobile device is configured in the projects array?
+### Q92. Which mobile device is configured in the projects array?
 - A) iPhone 12
 - B) Samsung Galaxy S21
 - C) Pixel 5
@@ -977,7 +937,7 @@
 
 ---
 
-### Q97. What does `Logger` use for its log format?
+### Q93. What does `Logger` use for its log format?
 - A) JSON format
 - B) `[timestamp] LEVEL: message` via `winston.format.printf()`
 - C) XML format
@@ -987,7 +947,7 @@
 
 ---
 
-### Q98. What determines the `LOG_LEVEL` for the Logger?
+### Q94. What determines the `LOG_LEVEL` for the Logger?
 - A) Hard-coded to `'debug'`
 - B) `process.env.LOG_LEVEL || 'info'`
 - C) Configured in playwright.config.ts
@@ -997,7 +957,7 @@
 
 ---
 
-### Q99. Why does `BasePage` auto-initialize a logger in its constructor?
+### Q95. Why does `BasePage` auto-initialize a logger in its constructor?
 - A) For debugging only
 - B) So every page object automatically has logging capability via `this.logger` without manual setup
 - C) Playwright requires it
@@ -1007,13 +967,53 @@
 
 ---
 
-### Q100. What is the full inheritance chain when `LoginPage.login()` calls `this.fill()`?
+### Q96. What is the full inheritance chain when `LoginPage.login()` calls `this.fill()`?
 - A) `LoginPage.fill()` → direct implementation
 - B) `LoginPage` inherits `fill()` from `BasePage`, which wraps `this.page.locator().fill()`
 - C) `fill()` comes from Playwright's `Page` class
 - D) `fill()` is a global function
 
 <details><summary>Answer</summary>B) `LoginPage` extends `BasePage`. When `this.fill()` is called, it invokes the protected method defined in `BasePage`, which internally uses Playwright's page/locator API to fill input fields.</details>
+
+---
+
+### Q97. What is the purpose of the `SoftAssert` helper class?
+- A) It replaces Playwright's built-in `expect`
+- B) It collects assertion failures without stopping the test and attaches a summary to Allure/HTML reports via `assertAll()`
+- C) It only logs assertions to the console
+- D) It retries failed assertions automatically
+
+<details><summary>Answer</summary>B) `SoftAssert` collects all assertion failures during the test. When `assertAll()` is called, it attaches a JSON summary to the report via `testInfo.attach()` and throws an aggregated error if any assertions failed.</details>
+
+---
+
+### Q98. How is `SoftAssert` provided to tests?
+- A) Tests must instantiate it manually with `new SoftAssert()`
+- B) It is a fixture in `base.fixture.ts` that receives `TestInfo` and is available via destructuring: `({ softAssert }) =>`
+- C) It is imported directly from the helpers folder
+- D) It is a global variable
+
+<details><summary>Answer</summary>B) `SoftAssert` is defined as a fixture in `base.fixture.ts`: `softAssert: async ({}, use, testInfo) => { await use(new SoftAssert(testInfo)); }`. Tests access it by destructuring the fixture parameter.</details>
+
+---
+
+### Q99. What assertion methods does `SoftAssert` provide?
+- A) Only `assertEqual` and `assertTrue`
+- B) `assertEqual`, `assertTrue`, `assertFalse`, `assertContains`, `assertGreaterThan`
+- C) The same methods as Playwright's `expect`
+- D) Only `assertAll`
+
+<details><summary>Answer</summary>B) `SoftAssert` provides five assertion methods: `assertEqual(desc, actual, expected)`, `assertTrue(desc, actual)`, `assertFalse(desc, actual)`, `assertContains(desc, actual, expected)`, and `assertGreaterThan(desc, actual, expected)` — plus `assertAll()` to finalize.</details>
+
+---
+
+### Q100. What happens when `softAssert.assertAll()` is called and there are failures?
+- A) It silently logs failures and the test passes
+- B) It attaches a JSON summary to the report via `testInfo.attach()` and throws an error listing all failures
+- C) It retries each failed assertion
+- D) It only throws the first failure
+
+<details><summary>Answer</summary>B) `assertAll()` checks if any failures were collected. If so, it attaches a detailed JSON report (pass/fail counts + failure details) to the Allure/HTML report, then throws an error with all failure descriptions aggregated.</details>
 
 ---
 

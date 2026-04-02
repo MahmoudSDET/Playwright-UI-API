@@ -8,6 +8,7 @@ import type { CheckoutPage } from '../pages/CheckoutPage';
 import { AuthAPI } from '../api/clients/AuthAPI';
 import { OrderAPI } from '../api/clients/OrderAPI';
 import { PageFactory } from '../data/factories/PageFactory';
+import { SoftAssert } from '../utils/helpers/SoftAssert';
 
 /**
  * EN: Type declarations for all core fixtures (page objects + API clients).
@@ -21,6 +22,7 @@ export type CoreFixtures = {
   checkoutPage: CheckoutPage;
   authAPI: AuthAPI;
   orderAPI: OrderAPI;
+  softAssert: SoftAssert;
 };
 
 /**
@@ -66,5 +68,10 @@ export const baseFixture = base.extend<CoreFixtures>({
   // EN: Order API client
   orderAPI: async ({ request }, use) => {
     await use(new OrderAPI(request));
+  },
+
+  // EN: SoftAssert instance scoped per test — collects failures and reports via assertAll()
+  softAssert: async ({}, use, testInfo) => {
+    await use(new SoftAssert(testInfo));
   },
 });

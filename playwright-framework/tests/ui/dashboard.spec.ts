@@ -21,11 +21,19 @@ test.describe('Dashboard Page Tests', () => {
   });
 
   // EN: Verify products are displayed | AR: Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¹Ø±Ø¶ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª
-  test('should display products on dashboard', async ({ dashboardPage }) => {
+  test('should display products on dashboard', async ({ dashboardPage, softAssert }) => {
     await test.step('Check product count on dashboard', async () => {
       const count = await dashboardPage.getProductCount();
-      expect(count).toBeGreaterThan(0);
+      softAssert.assertGreaterThan('Product count should be > 0', count, 0);
     });
+
+    await test.step('Check product names are not empty', async () => {
+      const names = await dashboardPage.getProductNames();
+      softAssert.assertGreaterThan('Product names length should be > 0', names.length, 0);
+      softAssert.assertTrue('First product name is not empty', names[0]?.trim().length > 0);
+    });
+
+    await softAssert.assertAll();
   });
 
   // EN: Verify product names are visible | AR: Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¸Ù‡ÙˆØ± Ø£Ø³Ù…Ø§Ø¡ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª

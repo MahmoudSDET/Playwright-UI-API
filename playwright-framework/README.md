@@ -50,7 +50,6 @@ Enterprise-grade test automation framework built with **Playwright** and the **P
 |                    CORE FRAMEWORK                             |
 |  BasePage | BaseAPI (+ Allure attachments)                   |
 |  ConfigManager (Singleton) | Logger (Singleton)              |
-|  Execution Strategies (Local | Staging | CI)                 |
 +--------------------------------------------------------------+
 |               UTILITIES & TEST DATA                          |
 |  Builders | Factories | Helpers | Types                      |
@@ -82,13 +81,8 @@ playwright-framework/
 │   │   │       ├── local.config.ts   # Local: 30s timeout, 0 retries, headed
 │   │   │       ├── staging.config.ts # Staging: 45s timeout, 1 retry, headless
 │   │   │       └── production.config.ts # Production: 60s timeout, 2 retries, headless
-│   │   ├── logger/
-│   │   │   └── Logger.ts            # Winston singleton – console + file transport
-│   │   └── strategies/
-│   │       ├── IExecutionStrategy.ts # Strategy interface
-│   │       ├── LocalStrategy.ts      # No video, 0 retries
-│   │       ├── StagingStrategy.ts    # Video on failure, 1 retry
-│   │       └── CIStrategy.ts         # Video on failure, 2 retries
+│   │   └── logger/
+│   │       └── Logger.ts            # Winston singleton – console + file transport
 │   │
 │   ├── fixtures/                     # LAYER 2: Dependency injection
 │   │   ├── base.fixture.ts           # PageFactory + API clients
@@ -142,7 +136,8 @@ playwright-framework/
 │       │   ├── DateHelper.ts         # Date formatting, comparison
 │       │   ├── StringHelper.ts       # Random strings, email generation
 │       │   ├── WaitHelper.ts         # Network idle, URL change, retry logic
-│       │   └── TestAnnotation.ts     # Dynamic test annotation injection
+│       │   ├── TestAnnotation.ts     # Dynamic test annotation injection
+│       │   └── SoftAssert.ts         # Collect assertion failures, attach summary to Allure
 │       └── types/
 │           └── global.d.ts           # ProcessEnv type extensions
 │
@@ -209,27 +204,13 @@ Format: `[2026-04-01 10:30:00] INFO: Logging in as user@example.com`
 
 Log level controlled by `LOG_LEVEL` env variable (default: `info`).
 
-#### Execution Strategies (`src/core/strategies/`)
-
-Implements the **Strategy pattern** for environment-specific test execution behavior:
-
-| Strategy | Video Recording | Retries | Use Case |
-|---|---|---|---|
-| **LocalStrategy** | No | 0 | Fast local development |
-| **StagingStrategy** | On failure | 1 | Pre-production validation |
-| **CIStrategy** | On failure | 2 | CI/CD pipeline execution |
-
-Each strategy implements `IExecutionStrategy`: `setup()`, `teardown()`, `getBaseURL()`, `shouldRecordVideo()`, `getRetryCount()`.
-
----
-
 ### 2. Fixtures & Dependency Injection (`src/fixtures/`)
 
 Playwright fixtures are layered and merged together. Tests import `{ test, expect }` from `src/fixtures/index.ts` which combines all four layers via `mergeTests()`.
 
 | Fixture | Auto | What It Provides |
 |---|---|---|
-| **base.fixture** | No | `pageFactory`, `loginPage`, `dashboardPage`, `cartPage`, `checkoutPage`, `authAPI`, `orderAPI` – page objects created via `PageFactory` (e.g. `pageFactory.createLoginPage()`), API clients lazily instantiated per test |
+| **base.fixture** | No | `pageFactory`, `loginPage`, `dashboardPage`, `cartPage`, `checkoutPage`, `authAPI`, `orderAPI`, `softAssert` – page objects created via `PageFactory` (e.g. `pageFactory.createLoginPage()`), API clients lazily instantiated per test, `SoftAssert` instance per test |
 | **auth.fixture** | No | `authenticatedPage` – navigates to login, performs login using ConfigManager credentials. Call explicitly when needed. |
 | **api-auth.fixture** | No | `workerIndex`, `workerAuth` (LoginResponse), `workerAuthAPI`, `workerUserAPI`, `workerOrderAPI` – parallel-safe API clients with per-worker token isolation |
 | **data.fixture** | No | `testUser` (unique user via factory), `testOrder` (standard order) – fresh data per test |
@@ -417,6 +398,7 @@ PageFactory.createDashboardPage(page)   // Used by base.fixture for DI
 | **StringHelper** | `generateRandomString(len)`, `generateEmail(prefix)`, `generateUsername(prefix)`, `capitalize()`, `truncate()` |
 | **WaitHelper** | `waitForNetworkIdle(page)`, `waitForUrlChange(page, currentUrl)`, `waitForResponse(page, pattern)`, `delay(ms)`, `retryAction(fn, retries, delay)` |
 | **TestAnnotation** | `annotate(testInfo, { feature, owner, severity })` – dynamically adds Allure annotations |
+| **SoftAssert** | `assertEqual(desc, actual, expected)`, `assertTrue(desc, actual)`, `assertFalse(desc, actual)`, `assertContains(desc, actual, expected)`, `assertGreaterThan(desc, actual, expected)`, `assertAll()` – collects failures without stopping, attaches JSON summary to Allure/HTML reports |
 
 #### Types (`src/utils/types/`)
 
@@ -646,7 +628,6 @@ Detailed test execution log at `reports/test-execution.log` with timestamps for 
 | **Template Method** | `BasePage`, `BaseAPI` | Common behavior in base class, specifics in subclasses |
 | **Interceptor** | `RequestInterceptor`, `ResponseInterceptor` | Centralized request header injection and response processing in `BaseAPI` |
 | **Singleton** | `ConfigManager`, `Logger` | Single instance of config and logger across framework |
-| **Strategy** | `src/core/strategies/` | Environment-specific execution behavior (local/staging/CI) |
 | **Builder** | `UserBuilder`, `OrderBuilder`, `AddressBuilder` | Fluent API for constructing complex test data |
 | **Factory** | `TestDataFactory`, `PageFactory` | Centralized object creation. `PageFactory` is used in `base.fixture` for page object instantiation. |
 | **Dependency Injection** | `src/fixtures/` | Playwright fixtures inject page objects and clients into tests |

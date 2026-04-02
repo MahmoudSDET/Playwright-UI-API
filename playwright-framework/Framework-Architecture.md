@@ -1219,13 +1219,8 @@ playwright-framework/
         ConfigManager.ts         # Environment-specific config singleton
         EnvironmentConfig.ts     # Environment configuration interface
         environments/            # Per-environment config files
-      strategies/
-        IExecutionStrategy.ts    # Strategy interface
-        LocalStrategy.ts         # Local execution strategy
-        StagingStrategy.ts       # Staging execution strategy
-        CIStrategy.ts            # CI execution strategy
     utils/
-      helpers/                   # DateHelper, StringHelper, WaitHelper, TestAnnotation
+      helpers/                   # DateHelper, StringHelper, WaitHelper, TestAnnotation, SoftAssert
       types/
         global.d.ts              # Global type declarations
     data/

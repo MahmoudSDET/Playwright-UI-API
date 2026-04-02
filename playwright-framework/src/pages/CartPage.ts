@@ -45,8 +45,13 @@ export class CartPage extends BasePage {
 
   // EN: Check if a specific product exists in the cart
   async isProductInCart(productName: string): Promise<boolean> {
-    await this.cartItems.first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
-    return this.cartItems.filter({ hasText: productName }).isVisible();
+    const productItem = this.cartItems.filter({ hasText: productName });
+    try {
+      await productItem.first().waitFor({ state: 'visible', timeout: 10000 });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // EN: Remove a product from the cart by its name
