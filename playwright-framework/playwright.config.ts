@@ -39,11 +39,11 @@ export default defineConfig({
   use: {
     // EN: Base URL for the application under test
     baseURL: process.env.BASE_URL || 'https://rahulshettyacademy.com/client/',
-    // EN: Capture trace only on first retry
-    trace: 'on-first-retry',
-    // EN: Take screenshot only on failure (full page)
+    // EN: Capture trace on first retry, retain on first failure for debugging (v1.43)
+    trace: 'retain-on-first-failure',
+    // EN: Take screenshot on first failure — captures immediately without retry (v1.49)
     screenshot: {
-      mode: 'only-on-failure',
+      mode: 'on-first-failure',
       fullPage: true,
     },
     // EN: Keep video recording only on failure

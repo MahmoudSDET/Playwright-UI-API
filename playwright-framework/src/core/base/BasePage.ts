@@ -66,6 +66,12 @@ export abstract class BasePage {
     return locator.isVisible();
   }
 
+  // EN: Filter a locator to only visible elements (v1.51)
+  //     Useful when multiple matching elements exist but only one is visible
+  protected getVisible(locator: Locator): Locator {
+    return locator.filter({ visible: true });
+  }
+
   // EN: Select an option from a dropdown element
   protected async selectOption(locator: Locator, value: string): Promise<void> {
     await locator.selectOption(value);
