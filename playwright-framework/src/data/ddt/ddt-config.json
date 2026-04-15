@@ -1,0 +1,30 @@
+{
+  "outputDir": "src/data/ddt/generated",
+  "fileName": "ddt-data.xlsx",
+  "rowCount": 50,
+  "sheets": [
+    {
+      "sheetName": "Users",
+      "columns": [
+        { "header": "FirstName",  "startWord": "RFQ_NM",      "type": "sequential" },
+        { "header": "LastName",   "startWord": "Last",       "type": "sequential" },
+        { "header": "Email",      "startWord": "testuser",   "type": "email" },
+        { "header": "Phone",      "startWord": "05",         "type": "phone" },
+        { "header": "City",       "startWord": "City",       "type": "sequential" },
+        { "header": "Country",    "startWord": "Country",    "type": "pick", "pickList": ["USA", "UK", "India", "Germany", "France"] },
+        { "header": "Age",        "startWord": "25",         "type": "number", "min": 18, "max": 65 },
+        { "header": "IsActive",   "startWord": "true",       "type": "boolean" }
+      ]
+    },
+    {
+      "sheetName": "Products",
+      "columns": [
+        { "header": "ProductName", "startWord": "Prod",      "type": "sequential" },
+        { "header": "SKU",         "startWord": "SKU",       "type": "sequential" },
+        { "header": "Price",       "startWord": "10",        "type": "number", "min": 10, "max": 999 },
+        { "header": "Category",    "startWord": "Cat",       "type": "pick", "pickList": ["Electronics", "Clothing", "Books", "Sports"] },
+        { "header": "InStock",     "startWord": "true",      "type": "boolean" }
+      ]
+    }
+  ]
+}
