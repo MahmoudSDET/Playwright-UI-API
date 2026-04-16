@@ -1,6 +1,8 @@
 {
   "outputDir": "src/data/ddt/generated",
   "fileName": "ddt-data.xlsx",
+  "csvFileName": "ddt-data.csv",
+  "jsonFileName": "ddt-data.json",
   "rowCount": 50,
   "sheets": [
     {

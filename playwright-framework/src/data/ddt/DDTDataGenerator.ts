@@ -6,8 +6,18 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 // EN: Import ExcelHelper utility for Excel read/write operations and the ExcelRow type
 import { ExcelHelper, ExcelRow } from '../../utils/helpers/ExcelHelper';
+// EN: Import CsvHelper utility for CSV read/write operations
+import { CsvHelper, CsvRow } from '../../utils/helpers/CsvHelper';
+// EN: Import JsonHelper utility for JSON read/write operations
+import { JsonHelper, JsonRow } from '../../utils/helpers/JsonHelper';
 // EN: Import the DDT configuration file (sheets, columns, rowCount, outputDir)
 import ddtConfig from './ddt-config.json';
+
+// EN: Supported output formats for DDT data generation
+export type OutputFormat = 'excel' | 'csv' | 'json';
+
+// EN: Union type for row data across all formats
+export type DataRow = ExcelRow | CsvRow | JsonRow;
 
 // EN: Name of the file used to store the config hash for change detection
 const CONFIG_HASH_FILE = '.config-hash';
@@ -30,8 +40,10 @@ export interface SheetConfig {
 
 // EN: Interface defining the full DDT configuration structure
 export interface DDTConfig {
-  outputDir: string;      // EN: Relative directory path for generated Excel files
-  fileName: string;       // EN: Name of the generated Excel file
+  outputDir: string;      // EN: Relative directory path for generated data files
+  fileName: string;       // EN: Name of the generated data file (Excel default)
+  csvFileName?: string;   // EN: Name of the generated CSV base file (optional)
+  jsonFileName?: string;  // EN: Name of the generated JSON file (optional)
   rowCount: number;       // EN: Number of rows to generate per sheet
   sheets: SheetConfig[];  // EN: Array of sheet configurations
 }
@@ -121,6 +133,194 @@ export async function generateAllExcelData(
   await ExcelHelper.writeMultiSheetExcel(filePath, sheets); // EN: Write all sheets into a single Excel file
   console.log(`✔ Generated ${config.sheets.length} sheets (${config.rowCount} rows each) → ${filePath}`); // EN: Log success message
   return filePath; // EN: Return the absolute path of the generated file
+}
+
+// ══════════════════════════════════════════════════════════
+// CSV Generation & Reading
+// ══════════════════════════════════════════════════════════
+
+/**
+ * Generate CSV files for ALL sheets defined in ddt-config.json.
+ * Each sheet becomes a separate CSV file: <baseName>_<sheetName>.csv
+ * Returns the absolute path of the generated CSV file.
+ */
+export function generateAllCsvData(
+  configOverride?: Partial<DDTConfig>, // EN: Optional partial config to override base settings
+  outputPath?: string                  // EN: Optional custom output file path
+): string {
+  const config: DDTConfig = { ...ddtConfig, ...configOverride } as DDTConfig; // EN: Merge base config with any overrides
+  const baseDir = path.resolve(__dirname, '..', '..', '..', config.outputDir); // EN: Resolve the absolute path to the output directory
+  const csvFileName = config.csvFileName ?? config.fileName.replace(/\.xlsx?$/, '.csv'); // EN: Derive CSV filename from Excel filename if not specified
+  const filePath = outputPath ?? path.resolve(baseDir, csvFileName); // EN: Use custom path or default
+
+  // EN: Map each sheet config into the format expected by writeMultiSheetCsv
+  const sheets = config.sheets.map((sheet) => ({
+    sheetName: sheet.sheetName,                    // EN: Sheet tab name
+    headers: sheet.columns.map((c) => c.header),   // EN: Extract header names
+    rows: generateRows(sheet.columns, config.rowCount), // EN: Generate all rows for this sheet
+  }));
+
+  CsvHelper.writeMultiSheetCsv(filePath, sheets); // EN: Write all sheets into a single CSV file
+  console.log(`✔ Generated ${config.sheets.length} sheets in CSV (${config.rowCount} rows each) → ${filePath}`);
+  return filePath; // EN: Return the file path
+}
+
+/**
+ * Generate CSV for a single sheet by name from the config.
+ */
+export function generateCsvForSheet(
+  sheetName: string,          // EN: Name of the sheet to generate
+  rowCountOverride?: number,  // EN: Optional custom row count
+  outputPath?: string         // EN: Optional custom output file path
+): string {
+  const config = ddtConfig as DDTConfig;
+  const sheetConfig = config.sheets.find((s) => s.sheetName === sheetName);
+  if (!sheetConfig) {
+    throw new Error(`Sheet "${sheetName}" not found in ddt-config.json`);
+  }
+
+  const count = rowCountOverride ?? config.rowCount;
+  const baseDir = path.resolve(__dirname, '..', '..', '..', config.outputDir);
+  const csvFileName = config.csvFileName ?? config.fileName.replace(/\.xlsx?$/, '.csv');
+  const filePath = outputPath ?? path.resolve(baseDir, csvFileName);
+  const headers = sheetConfig.columns.map((c) => c.header);
+  const rows = generateRows(sheetConfig.columns, count);
+
+  CsvHelper.writeCsv(filePath, headers, rows); // EN: Write single sheet CSV
+  console.log(`✔ Generated ${count} rows (CSV sheet: ${sheetName}) → ${filePath}`);
+  return filePath;
+}
+
+/**
+ * Read all rows back from a generated CSV file by sheet name.
+ */
+export function readGeneratedCsv(sheetName: string, customPath?: string): CsvRow[] {
+  const config = ddtConfig as DDTConfig;
+  const sheetConfig = config.sheets.find((s) => s.sheetName === sheetName);
+  if (!sheetConfig) {
+    throw new Error(`Sheet "${sheetName}" not found in ddt-config.json`);
+  }
+
+  const baseDir = path.resolve(__dirname, '..', '..', '..', config.outputDir);
+  const csvFileName = config.csvFileName ?? config.fileName.replace(/\.xlsx?$/, '.csv');
+  const filePath = customPath ?? path.resolve(baseDir, csvFileName);
+  return CsvHelper.readMultiSheetCsv(filePath, sheetConfig.sheetName); // EN: Read specific sheet from single CSV file
+}
+
+// ══════════════════════════════════════════════════════════
+// JSON Generation & Reading
+// ══════════════════════════════════════════════════════════
+
+/**
+ * Generate a JSON file for ALL sheets defined in ddt-config.json.
+ * Structure: { "Users": [...rows], "Products": [...rows] }
+ * Returns the absolute path of the generated JSON file.
+ */
+export function generateAllJsonData(
+  configOverride?: Partial<DDTConfig>, // EN: Optional partial config to override base settings
+  outputPath?: string                  // EN: Optional custom output file path
+): string {
+  const config: DDTConfig = { ...ddtConfig, ...configOverride } as DDTConfig;
+  const baseDir = path.resolve(__dirname, '..', '..', '..', config.outputDir);
+  const jsonFileName = config.jsonFileName ?? config.fileName.replace(/\.xlsx?$/, '.json'); // EN: Derive JSON filename
+  const filePath = outputPath ?? path.resolve(baseDir, jsonFileName);
+
+  // EN: Map each sheet config into the format expected by writeMultiSheetJson
+  const sheets = config.sheets.map((sheet) => ({
+    sheetName: sheet.sheetName,
+    rows: generateRows(sheet.columns, config.rowCount),
+  }));
+
+  JsonHelper.writeMultiSheetJson(filePath, sheets); // EN: Write all sheets into one JSON file
+  console.log(`✔ Generated ${config.sheets.length} sheets (${config.rowCount} rows each) → ${filePath}`);
+  return filePath;
+}
+
+/**
+ * Generate JSON for a single sheet by name from the config.
+ * Writes a flat array of rows to the JSON file.
+ */
+export function generateJsonForSheet(
+  sheetName: string,
+  rowCountOverride?: number,
+  outputPath?: string
+): string {
+  const config = ddtConfig as DDTConfig;
+  const sheetConfig = config.sheets.find((s) => s.sheetName === sheetName);
+  if (!sheetConfig) {
+    throw new Error(`Sheet "${sheetName}" not found in ddt-config.json`);
+  }
+
+  const count = rowCountOverride ?? config.rowCount;
+  const baseDir = path.resolve(__dirname, '..', '..', '..', config.outputDir);
+  const jsonFileName = config.jsonFileName ?? config.fileName.replace(/\.xlsx?$/, `.${sheetName}.json`);
+  const filePath = outputPath ?? path.resolve(baseDir, jsonFileName);
+  const rows = generateRows(sheetConfig.columns, count);
+
+  JsonHelper.writeJson(filePath, rows); // EN: Write single-sheet JSON
+  console.log(`✔ Generated ${count} rows (JSON sheet: ${sheetName}) → ${filePath}`);
+  return filePath;
+}
+
+/**
+ * Read all rows back from a generated JSON file by sheet name.
+ */
+export function readGeneratedJson(sheetName: string, customPath?: string): JsonRow[] {
+  const config = ddtConfig as DDTConfig;
+  const sheetConfig = config.sheets.find((s) => s.sheetName === sheetName);
+  if (!sheetConfig) {
+    throw new Error(`Sheet "${sheetName}" not found in ddt-config.json`);
+  }
+
+  const baseDir = path.resolve(__dirname, '..', '..', '..', config.outputDir);
+  const jsonFileName = config.jsonFileName ?? config.fileName.replace(/\.xlsx?$/, '.json');
+  const filePath = customPath ?? path.resolve(baseDir, jsonFileName);
+  return JsonHelper.readJson(filePath, sheetConfig.sheetName);
+}
+
+// ══════════════════════════════════════════════════════════
+// Unified Multi-Format Generation
+// ══════════════════════════════════════════════════════════
+
+/**
+ * Generate data files in the specified format (excel, csv, or json).
+ * Delegates to the format-specific generator.
+ */
+export async function generateAllData(
+  format: OutputFormat,
+  configOverride?: Partial<DDTConfig>,
+  outputPath?: string
+): Promise<string> {
+  switch (format) {
+    case 'excel':
+      return generateAllExcelData(configOverride, outputPath);
+    case 'csv':
+      return generateAllCsvData(configOverride, outputPath);
+    case 'json':
+      return generateAllJsonData(configOverride, outputPath);
+    default:
+      throw new Error(`Unsupported output format: ${format}`);
+  }
+}
+
+/**
+ * Read rows from a generated data file in the specified format.
+ */
+export async function readGeneratedData(
+  format: OutputFormat,
+  sheetName: string,
+  customPath?: string
+): Promise<DataRow[]> {
+  switch (format) {
+    case 'excel':
+      return readGeneratedExcel(sheetName, customPath);
+    case 'csv':
+      return readGeneratedCsv(sheetName, customPath);
+    case 'json':
+      return readGeneratedJson(sheetName, customPath);
+    default:
+      throw new Error(`Unsupported output format: ${format}`);
+  }
 }
 
 /**
